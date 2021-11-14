@@ -2,12 +2,8 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.github.javlock</groupId>
-    <artifactId>pase</artifactId>
+    <artifactId>pase-hub</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
-  <artifactId>pase-hub</artifactId>
-  <packaging>pom</packaging>
-  <modules>
-  	<module>pase-hub-instance</module>
-  </modules>
+  <artifactId>pase-hub-instance</artifactId>
 </project>

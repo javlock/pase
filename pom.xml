@@ -6,10 +6,43 @@
 	<artifactId>pase</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<maven.compiler.target>17</maven.compiler.target>
+		<maven.compiler.source>17</maven.compiler.source>
+
+
+		<lombok.version>1.18.22</lombok.version>
+		<org.slf4j.version>2.0.0-alpha5</org.slf4j.version>
+	</properties>
+
 	<modules>
 		<module>pase-libs</module>
 		<module>pase-cli</module>
 		<module>pase-web</module>
 		<module>pase-hub</module>
+		<module>pase-updater</module>
 	</modules>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>${lombok.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<!-- LOGS -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${org.slf4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>${org.slf4j.version}</version>
+		</dependency>
+		<!-- LOGS -->
+	</dependencies>
 </project>
