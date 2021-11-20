@@ -35,7 +35,7 @@ public class PaseHub extends Thread {
 	private final @Getter DataBase db = new DataBase();
 
 	private int port = 6000;
-	private ChannelFuture bindChannelFuture;
+	private @Getter ChannelFuture bindChannelFuture;
 
 	private void init() {
 		initDataBase();

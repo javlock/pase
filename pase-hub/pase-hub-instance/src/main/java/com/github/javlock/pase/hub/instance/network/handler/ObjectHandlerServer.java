@@ -20,6 +20,12 @@ public class ObjectHandlerServer extends ChannelDuplexHandler {
 		hub = instanceHub;
 	}
 
+	private void broadcast(Serializable msg) {
+		if (hub.getBindChannelFuture() != null) {
+			hub.getBindChannelFuture().channel().writeAndFlush(msg);
+		}
+	}
+
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
 		LOGGER.info("connected {}", ctx.channel().remoteAddress());
@@ -36,10 +42,11 @@ public class ObjectHandlerServer extends ChannelDuplexHandler {
 			Serializable data = savePacket.getData();
 			if (data instanceof UrlData urldata) {
 				hub.getDb().saveUrlData(urldata);
-				return;
 			} else {
 				LOGGER.warn("data class:[{}] data:[{}]", data.getClass().getSimpleName(), data);
+				return;
 			}
+			broadcast((Serializable) msg);
 			return;
 		}
 

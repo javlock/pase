@@ -22,7 +22,7 @@ import lombok.Setter;
 
 public class WebCrawlerWorker extends Thread {
 	private @Getter @Setter Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", 9050));
-	public UrlActionInterface urlDetected;
+	private @Setter UrlActionInterface urlDetected;
 	public WorkerEventInterface workerEventInterface;
 	private @Getter @Setter UrlData urlData;
 

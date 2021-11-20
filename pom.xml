@@ -15,10 +15,13 @@
 
 		<lombok.version>1.18.22</lombok.version>
 		<org.slf4j.version>2.0.0-alpha5</org.slf4j.version>
-		
+
 		<jsoup.version>1.13.1</jsoup.version>
-		
+
 		<netty.version>4.1.66.Final</netty.version>
+
+		<spotbugs.version>4.4.2</spotbugs.version>
+
 	</properties>
 
 	<modules>
@@ -30,7 +33,7 @@
 	</modules>
 
 	<dependencies>
-	<!-- NETWORK -->
+		<!-- NETWORK -->
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-all</artifactId>
@@ -38,7 +41,7 @@
 			<scope>compile</scope>
 		</dependency>
 		<!-- NETWORK -->
-	
+
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
@@ -58,4 +61,55 @@
 		</dependency>
 		<!-- LOGS -->
 	</dependencies>
+	<build>
+		<plugins>
+			
+			<!--GIT -->
+			<plugin>
+				<groupId>pl.project13.maven</groupId>
+				<artifactId>git-commit-id-plugin</artifactId>
+				<version>4.0.0</version>
+				<executions>
+					<execution>
+						<id>get-the-git-infos</id>
+						<goals>
+							<goal>revision</goal>
+						</goals>
+						<phase>initialize</phase>
+					</execution>
+				</executions>
+				<configuration>
+					<generateGitPropertiesFile>true</generateGitPropertiesFile>
+					<generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+					<includeOnlyProperties>
+						<includeOnlyProperty>^git.build.(time|version)$</includeOnlyProperty>
+						<includeOnlyProperty>^git.local.branch.ahead$</includeOnlyProperty>
+						<includeOnlyProperty>^git.commit.id.(abbrev|full)$</includeOnlyProperty>
+					</includeOnlyProperties>
+					<commitIdGenerationMode>full</commitIdGenerationMode>
+				</configuration>
+			</plugin>
+			<!--GIT -->
+			<!-- FINDBUGS -->
+			<plugin>
+				<groupId>com.github.spotbugs</groupId>
+				<artifactId>spotbugs-maven-plugin</artifactId>
+				<version>${spotbugs.version}</version>
+				<dependencies>
+					<dependency>
+						<groupId>com.github.spotbugs</groupId>
+						<artifactId>spotbugs</artifactId>
+						<version>${spotbugs.version}</version>
+					</dependency>
+				</dependencies>
+				<configuration>
+					<failOnError>true</failOnError>
+				</configuration>
+			</plugin>
+
+			<!-- FINDBUGS -->
+		</plugins>
+	</build>
+
+
 </project>

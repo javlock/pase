@@ -37,7 +37,7 @@ public class WebCrawler extends Thread {
 		webCrawler.start();
 	}
 
-	public UrlActionInterface urlDetected = new UrlActionInterface() {
+	final public UrlActionInterface urlDetected = new UrlActionInterface() {
 
 		@Override
 		public void detected(UrlData parent, String data) {
@@ -51,7 +51,7 @@ public class WebCrawler extends Thread {
 				// check data
 				// append new
 				UrlData newData = new UrlData().setUrl(data).setDomain(UrlUtils.getDomainByUrl(data)).build();
-				;
+
 				try {
 					if (!storage.contains(newData)) {
 						storage.appendNew(newData);
@@ -219,7 +219,7 @@ public class WebCrawler extends Thread {
 					WebCrawlerWorker worker = new WebCrawlerWorker();
 					worker.setName(url);
 					worker.setUrlData(urlData);
-					worker.urlDetected = urlDetected;
+					worker.setUrlDetected(urlDetected);
 					worker.workerEventInterface = workerEventInterface;
 					storage.getWorkers().put(url, worker);
 					worker.start();
