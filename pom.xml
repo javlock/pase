@@ -20,7 +20,14 @@
 
 		<netty.version>4.1.66.Final</netty.version>
 
+		<jackson.version>2.13.0</jackson.version>
+		<postgresql.version>42.3.1</postgresql.version>
+		<ormlite.version>5.6</ormlite.version>
+
+
+
 		<spotbugs.version>4.4.2</spotbugs.version>
+		<spotbugs.dep.version>4.5.0</spotbugs.dep.version>
 
 	</properties>
 
@@ -33,6 +40,36 @@
 	</modules>
 
 	<dependencies>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>${postgresql.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.j256.ormlite</groupId>
+			<artifactId>ormlite-core</artifactId>
+			<version>${ormlite.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.j256.ormlite</groupId>
+			<artifactId>ormlite-jdbc</artifactId>
+			<version>${ormlite.version}</version>
+		</dependency>
+
+
+		<!-- YAML -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-yaml</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<!-- YAML -->
+
 		<!-- NETWORK -->
 		<dependency>
 			<groupId>io.netty</groupId>
@@ -63,7 +100,7 @@
 	</dependencies>
 	<build>
 		<plugins>
-			
+
 			<!--GIT -->
 			<plugin>
 				<groupId>pl.project13.maven</groupId>
@@ -81,11 +118,9 @@
 				<configuration>
 					<generateGitPropertiesFile>true</generateGitPropertiesFile>
 					<generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
-					<includeOnlyProperties>
-						<includeOnlyProperty>^git.build.(time|version)$</includeOnlyProperty>
-						<includeOnlyProperty>^git.local.branch.ahead$</includeOnlyProperty>
-						<includeOnlyProperty>^git.commit.id.(abbrev|full)$</includeOnlyProperty>
-					</includeOnlyProperties>
+					<!-- <includeOnlyProperties> <includeOnlyProperty>^git.build.(time|version)$</includeOnlyProperty> 
+						<includeOnlyProperty>^git.local.branch.ahead$</includeOnlyProperty> <includeOnlyProperty>^git.commit.id.(abbrev|full)$</includeOnlyProperty> 
+						</includeOnlyProperties> -->
 					<commitIdGenerationMode>full</commitIdGenerationMode>
 				</configuration>
 			</plugin>
@@ -99,7 +134,7 @@
 					<dependency>
 						<groupId>com.github.spotbugs</groupId>
 						<artifactId>spotbugs</artifactId>
-						<version>${spotbugs.version}</version>
+						<version>${spotbugs.dep.version}</version>
 					</dependency>
 				</dependencies>
 				<configuration>

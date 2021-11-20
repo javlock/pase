@@ -37,7 +37,7 @@ public class WebCrawler extends Thread {
 		webCrawler.start();
 	}
 
-	final public UrlActionInterface urlDetected = new UrlActionInterface() {
+	public final UrlActionInterface urlDetected = new UrlActionInterface() {
 
 		@Override
 		public void detected(UrlData parent, String data) {
@@ -91,15 +91,21 @@ public class WebCrawler extends Thread {
 
 		@Override
 		public void endScan(WebCrawlerWorker webCrawlerWorker) {
-			String url = webCrawlerWorker.getUrlData().getUrl();
+			UrlData urldata = webCrawlerWorker.getUrlData();
+			String url = urldata.getUrl();
 			String urlWithOutSession = UrlUtils.getUrlWithOutSession(url);
 			boolean parsedAdded = storage.appendParsed(urlWithOutSession.hashCode());
 			storage.getWorkers().remove(url, webCrawlerWorker);
 
 			if (parsedAdded) {
 				SavePacket packet = new SavePacket();
+
 				UrlData forSendUrlData = new UrlData().setUrl(urlWithOutSession)
 						.setDomain(UrlUtils.getDomainByUrl(urlWithOutSession)).build();
+
+				forSendUrlData.setPageType(urldata.getPageType());
+				forSendUrlData.setTitle(urldata.getTitle());
+
 				packet.setData(forSendUrlData);
 				send(packet);
 			}
@@ -109,7 +115,7 @@ public class WebCrawler extends Thread {
 
 	private final @Getter Storage storage = new Storage(this);
 
-	private int maxThread = 10;
+	private int maxThread = 25;
 	private File inputFile = new File("input_url");
 	private File inputFileAllow = new File("input_allow");
 	private File inputFileForb = new File("input_forb");
@@ -227,7 +233,7 @@ public class WebCrawler extends Thread {
 			}
 
 			try {
-				Thread.sleep(30);
+				Thread.sleep(300);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

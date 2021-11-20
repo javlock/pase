@@ -11,5 +11,6 @@
 	<packaging>pom</packaging>
 	<modules>
 		<module>pase-web-crawler</module>
+		<module>pase-web-fileDownloader</module>
 	</modules>
 </project>

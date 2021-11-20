@@ -3,25 +3,32 @@ package com.github.javlock.pase.web.crawler.data;
 import java.io.Serializable;
 import java.util.Objects;
 
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
+
 import lombok.Getter;
 import lombok.Setter;
 
+@DatabaseTable(tableName = "urls")
 public class UrlData implements Serializable {
 	public enum URLTYPE {
-		PAGE, FILE
+		PAGE, FILE;
 	}
 
 	private static final long serialVersionUID = 4979287113557476414L;
-	private @Getter String domain;
-	private @Getter String url;
-	private @Getter @Setter String title;
+
+	private @Getter @Setter @DatabaseField(id = true) int hashId;
+	private @Getter @DatabaseField(width = 2400) String domain;
+	private @Getter @DatabaseField(width = 2400) String url;
+	private @Getter @Setter @DatabaseField(width = 2400) String title;
 	private @Getter boolean builded = false;
-	private @Getter @Setter URLTYPE pageType;
+	private @Getter @Setter @DatabaseField URLTYPE pageType;
 
 	public UrlData build() {
 		if (domain == null) {
 			throw new IllegalArgumentException(String.format("UrlData.build():%s", url));
 		}
+		hashId = url.hashCode();
 		builded = true;
 		return this;
 	}
@@ -74,6 +81,11 @@ public class UrlData implements Serializable {
 		}
 		builder.append("builded=");
 		builder.append(builded);
+		builder.append(", ");
+		if (pageType != null) {
+			builder.append("pageType=");
+			builder.append(pageType);
+		}
 		builder.append("]");
 		return builder.toString();
 	}

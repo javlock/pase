@@ -13,6 +13,7 @@ import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
 
 import com.github.javlock.pase.web.crawler.data.UrlData;
+import com.github.javlock.pase.web.crawler.data.UrlData.URLTYPE;
 import com.github.javlock.pase.web.crawler.interfaces.UrlActionInterface;
 import com.github.javlock.pase.web.crawler.interfaces.WorkerEventInterface;
 import com.github.javlock.pase.web.crawler.utils.url.UrlUtils;
@@ -31,6 +32,7 @@ public class WebCrawlerWorker extends Thread {
 
 		Response resp = null;
 		try {
+			urlData.setPageType(URLTYPE.PAGE);
 			resp = Jsoup.connect(urlData.getUrl()).proxy(proxy).userAgent("Mozilla").execute();
 			Document doc = resp.parse();
 			urlData.setTitle(doc.title());
@@ -54,6 +56,7 @@ public class WebCrawlerWorker extends Thread {
 				System.err.println(status + ":" + urlData);
 			}
 		} catch (UnsupportedMimeTypeException e) {
+			urlData.setPageType(URLTYPE.FILE);
 			urlDetected.fileDetected(urlData);
 		} catch (IOException e) {
 			e.printStackTrace();
