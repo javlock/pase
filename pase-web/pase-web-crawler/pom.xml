@@ -4,10 +4,10 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.github.javlock</groupId>
-		<artifactId>pase-hub</artifactId>
+		<artifactId>pase-web</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
-	<artifactId>pase-hub-instance</artifactId>
+	<artifactId>pase-web-crawler</artifactId>
 	<dependencies>
 		<dependency>
 			<groupId>com.github.javlock</groupId>
@@ -15,4 +15,5 @@
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
+
 </project>

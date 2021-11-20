@@ -1,4 +1,9 @@
 .project
 .settings/
 .classpath
+
 target
+
+input_allow
+input_forb
+input_url

@@ -15,6 +15,10 @@
 
 		<lombok.version>1.18.22</lombok.version>
 		<org.slf4j.version>2.0.0-alpha5</org.slf4j.version>
+		
+		<jsoup.version>1.13.1</jsoup.version>
+		
+		<netty.version>4.1.66.Final</netty.version>
 	</properties>
 
 	<modules>
@@ -26,6 +30,15 @@
 	</modules>
 
 	<dependencies>
+	<!-- NETWORK -->
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-all</artifactId>
+			<version>${netty.version}</version>
+			<scope>compile</scope>
+		</dependency>
+		<!-- NETWORK -->
+	
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
