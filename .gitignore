@@ -7,3 +7,5 @@ target
 input_allow
 input_forb
 input_url
+
+config.yaml
