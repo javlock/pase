@@ -5,9 +5,5 @@
     <artifactId>pase</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
-  <artifactId>pase-hub</artifactId>
-  <packaging>pom</packaging>
-  <modules>
-  	<module>pase-hub-instance</module>
-  </modules>
+  <artifactId>pase-updater</artifactId>
 </project>
