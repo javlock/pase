@@ -1,4 +1,4 @@
-package com.github.javlock.pase.web.crawler.utils.url;
+package com.github.javlock.pase.libs.utils.web.url;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -4,8 +4,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.github.javlock.pase.libs.data.web.UrlData;
 import com.github.javlock.pase.web.crawler.WebCrawler;
-import com.github.javlock.pase.web.crawler.data.UrlData;
 import com.github.javlock.pase.web.crawler.storage.Storage;
 
 public class FilterEngine {

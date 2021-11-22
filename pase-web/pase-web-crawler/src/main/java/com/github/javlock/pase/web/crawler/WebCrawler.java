@@ -6,16 +6,23 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
-import com.github.javlock.pase.web.crawler.data.Packet;
-import com.github.javlock.pase.web.crawler.data.SavePacket;
-import com.github.javlock.pase.web.crawler.data.UrlData;
+import org.slf4j.LoggerFactory;
+
+import com.github.javlock.pase.libs.api.instance.PaseApp;
+import com.github.javlock.pase.libs.data.web.UpdatedUrlData;
+import com.github.javlock.pase.libs.data.web.UrlData;
+import com.github.javlock.pase.libs.network.Packet;
+import com.github.javlock.pase.libs.network.data.DataPacket;
+import com.github.javlock.pase.libs.network.data.DataPacket.ACTIONTYPE;
+import com.github.javlock.pase.libs.network.data.DataPacket.PACKETTYPE;
+import com.github.javlock.pase.libs.utils.web.url.UrlUtils;
 import com.github.javlock.pase.web.crawler.engine.filter.FilterEngine;
 import com.github.javlock.pase.web.crawler.interfaces.UrlActionInterface;
 import com.github.javlock.pase.web.crawler.interfaces.WorkerEventInterface;
 import com.github.javlock.pase.web.crawler.network.handler.ObjectHandlerClient;
 import com.github.javlock.pase.web.crawler.storage.Storage;
-import com.github.javlock.pase.web.crawler.utils.url.UrlUtils;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
@@ -30,12 +37,13 @@ import io.netty.handler.codec.serialization.ObjectEncoder;
 import lombok.Getter;
 
 public class WebCrawler extends Thread {
-
 	public static void main(String[] args) throws IOException {
 		WebCrawler webCrawler = new WebCrawler();
 		webCrawler.init();
 		webCrawler.start();
 	}
+
+	private final @Getter PaseApp paseApp = new PaseApp();
 
 	public final UrlActionInterface urlDetected = new UrlActionInterface() {
 
@@ -97,22 +105,15 @@ public class WebCrawler extends Thread {
 			boolean parsedAdded = storage.appendParsed(urlWithOutSession.hashCode());
 			storage.getWorkers().remove(url, webCrawlerWorker);
 
+			urldata.setUrl(urlWithOutSession).setDomain(UrlUtils.getDomainByUrl(urlWithOutSession)).build();
 			if (parsedAdded) {
-				SavePacket packet = new SavePacket();
 
-				UrlData forSendUrlData = new UrlData().setUrl(urlWithOutSession)
-						.setDomain(UrlUtils.getDomainByUrl(urlWithOutSession)).build();
-
-				forSendUrlData.setPageType(urldata.getPageType());
-				forSendUrlData.setTitle(urldata.getTitle());
-
-				packet.setData(forSendUrlData);
-				send(packet);
+				send(new DataPacket().setType(PACKETTYPE.REQUEST).setAction(ACTIONTYPE.SAVE).setData(urldata).check());
 			}
 		}
 
 	};
-
+	private WebCrawler instanceCrawler = this;
 	private final @Getter Storage storage = new Storage(this);
 
 	private int maxThread = 25;
@@ -125,6 +126,8 @@ public class WebCrawler extends Thread {
 
 	private NioEventLoopGroup nioEventLoopGroup;
 	private ChannelFuture future;
+
+	ConcurrentHashMap<String, WebCrawlerWorker> updateWorkers = new ConcurrentHashMap<>();
 
 	private void init() throws IOException {
 		initNetwork();
@@ -176,14 +179,13 @@ public class WebCrawler extends Thread {
 								ClassResolvers.softCachingConcurrentResolver(Packet.class.getClassLoader())));
 						p.addLast(new ObjectEncoder());
 
-						p.addLast(new ObjectHandlerClient());
+						p.addLast(new ObjectHandlerClient(instanceCrawler));
 
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				}
 			});
-
 			String host = "127.0.0.1";
 			int port = 6000;
 			future = bootstrap.connect(host, port).awaitUninterruptibly();
@@ -244,5 +246,59 @@ public class WebCrawler extends Thread {
 		if (future != null) {
 			future.channel().writeAndFlush(object);
 		}
+	}
+
+	public Optional<UpdatedUrlData> updateURL(UrlData urldata) throws InterruptedException {
+		String url = urldata.getUrl();
+		if (updateWorkers.containsKey(url)) {
+			return Optional.empty();
+		}
+
+		if (updateWorkers.size() >= maxThread) {
+			return Optional.empty();
+		}
+		LoggerFactory.getLogger("updateURL").info("for {}", url);
+
+		WebCrawlerWorker worker = new WebCrawlerWorker();
+		worker.setName("updateURL-" + url);
+		worker.setUrlData(urldata);
+
+		UpdatedUrlData updatedUrlData = new UpdatedUrlData();
+
+		worker.setUrlDetected(new UrlActionInterface() {
+
+			@Override
+			public void detected(UrlData url, String newUrl) {
+				updatedUrlData.getDetected().add(newUrl);
+			}
+
+			@Override
+			public void fileDetected(UrlData fileUrl) {
+				updatedUrlData.getFileDetected().add(fileUrl);
+			}
+
+			@Override
+			public void forbidden(UrlData data) {
+				updatedUrlData.getForbidden().add(data);
+			}
+
+			@Override
+			public void mailDetected(UrlData parent, String data) {
+				updatedUrlData.getMailDetected().add(data);
+			}
+
+			@Override
+			public void notFound(UrlData url) {
+				updatedUrlData.getNotFound().add(url);
+			}
+		});
+		updateWorkers.put(url, worker);
+		worker.start();
+		worker.join();
+
+		updatedUrlData.setNewData(worker.getUrlData());
+		updateWorkers.remove(url);
+
+		return Optional.of(updatedUrlData);
 	}
 }
