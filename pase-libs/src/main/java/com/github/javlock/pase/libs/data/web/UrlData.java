@@ -1,4 +1,4 @@
-package com.github.javlock.pase.web.crawler.data;
+package com.github.javlock.pase.libs.data.web;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -12,7 +12,7 @@ import lombok.Setter;
 @DatabaseTable(tableName = "urls")
 public class UrlData implements Serializable {
 	public enum URLTYPE {
-		PAGE, FILE;
+		PAGE, FILE, UKNOWN;
 	}
 
 	private static final long serialVersionUID = 4979287113557476414L;
@@ -21,8 +21,10 @@ public class UrlData implements Serializable {
 	private @Getter @DatabaseField(width = 2400) String domain;
 	private @Getter @DatabaseField(width = 2400) String url;
 	private @Getter @Setter @DatabaseField(width = 2400) String title;
+	private @Getter @Setter @DatabaseField Long time;
+	private @Getter @Setter @DatabaseField int statusCode;
 	private @Getter boolean builded = false;
-	private @Getter @Setter @DatabaseField URLTYPE pageType;
+	private @Getter @Setter @DatabaseField URLTYPE pageType = URLTYPE.UKNOWN;
 
 	public UrlData build() {
 		if (domain == null) {

@@ -2,7 +2,7 @@ package com.github.javlock.pase.web.filedownloader;
 
 import java.util.Optional;
 
-import com.github.javlock.pase.web.crawler.data.UrlData;
+import com.github.javlock.pase.libs.data.web.UrlData;
 import com.github.javlock.pase.web.filedownloader.storage.FDStorage;
 
 public class Filedownloader extends Thread {

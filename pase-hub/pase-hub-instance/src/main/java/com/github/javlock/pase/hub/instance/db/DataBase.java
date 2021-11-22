@@ -1,16 +1,20 @@
 package com.github.javlock.pase.hub.instance.db;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.javlock.pase.hub.instance.PaseHub;
 import com.github.javlock.pase.hub.instance.config.db.DataBaseConfig;
-import com.github.javlock.pase.web.crawler.data.UrlData;
+import com.github.javlock.pase.libs.data.web.UrlData;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcPooledConnectionSource;
+import com.j256.ormlite.stmt.QueryBuilder;
+import com.j256.ormlite.stmt.Where;
 import com.j256.ormlite.table.TableUtils;
 
 public class DataBase {
@@ -53,6 +57,41 @@ public class DataBase {
 		createTableFor(urlDAO, UrlData.class);
 	}
 
+	public List<UrlData> getUrlFilesNoParsed() throws SQLException {
+		ArrayList<UrlData> resp = new ArrayList<>();
+		QueryBuilder<UrlData, Integer> queryBuilder = urlDAO.queryBuilder();
+		Where<UrlData, Integer> where = queryBuilder.where();
+
+		where.eq("pageType", UrlData.URLTYPE.FILE);
+
+		List<UrlData> listUrls = queryBuilder.query();
+		for (UrlData urlData : listUrls) {
+
+		}
+		// TODO отсеять уже разобранные файлы
+
+		return resp;
+	}
+
+	public List<UrlData> getUrlTimeExceeded() throws SQLException {
+		ArrayList<UrlData> resp = new ArrayList<>();
+		QueryBuilder<UrlData, Integer> queryBuilder = urlDAO.queryBuilder();
+		Where<UrlData, Integer> where = queryBuilder.where();
+
+		where.eq("pageType", UrlData.URLTYPE.PAGE);
+
+		List<UrlData> listUrls = queryBuilder.query();
+		for (UrlData urlData : listUrls) {
+			long time = System.currentTimeMillis() / 1000;
+			Long configTime = hub.getConfig().getTimeExceeded();
+			long checkTime = urlData.getTime() + configTime;
+			if (checkTime <= time) {
+				resp.add(urlData);
+			}
+		}
+		return resp;
+	}
+
 	public void init() throws SQLException {
 		createSource();
 		createDAOs();
@@ -70,23 +109,60 @@ public class DataBase {
 
 	public void saveUrlData(UrlData urldata) throws SQLException {
 		if (urlDAO.idExists(urldata.getHashId())) {
-			UrlData fromDb = urlDAO.queryForId(urldata.getHashId());
-
-			if (fromDb.getPageType() != urldata.getPageType()) {
-				fromDb.setPageType(urldata.getPageType());
-			}
-
-			if (
-			// null
-			(fromDb.getTitle() == null && urldata.getTitle() != null)
-					// no null but !equals
-					|| (fromDb.getTitle() != null && !urldata.getTitle().equals(fromDb.getTitle()))) {
-				fromDb.setTitle(urldata.getTitle());
-			}
-
-			urlDAO.update(fromDb);
+			saveUrlDataExist(urldata);
 		} else {
 			urlDAO.create(urldata);
+			LOGGER.info("saved:{}", urldata);
+		}
+	}
+
+	private void saveUrlDataExist(UrlData urldata) throws SQLException {
+		UrlData fromDb = urlDAO.queryForId(urldata.getHashId());
+		boolean updated = false;
+
+		// PAGETYPE
+		if (fromDb.getPageType() != urldata.getPageType()) {
+			fromDb.setPageType(urldata.getPageType());
+			updated = true;
+		}
+		// TITLE
+		String fdbTitle = fromDb.getTitle();
+		String uTitle = urldata.getTitle();
+
+		if (uTitle != null) {
+			if (fdbTitle == null) {
+				fromDb.setTitle(uTitle);
+				updated = true;
+			} else if (fdbTitle != null && !fdbTitle.equals(uTitle)) {
+				fromDb.setTitle(uTitle);
+				updated = true;
+			}
+		}
+
+		if (
+		// null
+
+		(fromDb.getTitle() == null && urldata.getTitle() != null)
+				// no null but !equals
+				|| (fromDb.getTitle() != null && !urldata.getTitle().equals(fromDb.getTitle()))) {
+			fromDb.setTitle(urldata.getTitle());
+			updated = true;
+		}
+		// TIME
+		if ((fromDb.getTime() == null && urldata.getTime() != null)
+				|| (fromDb.getTime() != null && urldata.getTime() > fromDb.getTime())) {
+			fromDb.setTime(urldata.getTime());
+			updated = true;
+		}
+		// LAST >STATUSCODE<
+		if (fromDb.getStatusCode() != urldata.getStatusCode()) {
+			fromDb.setStatusCode(urldata.getStatusCode());
+			updated = true;
+
+		}
+		if (updated) {
+			urlDAO.update(fromDb);
+			LOGGER.info("updated:{}", fromDb);
 		}
 	}
 

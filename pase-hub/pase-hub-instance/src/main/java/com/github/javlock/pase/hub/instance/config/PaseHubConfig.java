@@ -9,5 +9,5 @@ public class PaseHubConfig {
 	private @Getter @Setter int port = 6000;
 
 	private @Getter DataBaseConfig dbConfig = new DataBaseConfig();
-
+	private @Getter @Setter Long timeExceeded = 3600L;
 }

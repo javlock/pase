@@ -6,9 +6,9 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import com.github.javlock.pase.libs.data.web.UrlData;
 import com.github.javlock.pase.web.crawler.WebCrawler;
 import com.github.javlock.pase.web.crawler.WebCrawlerWorker;
-import com.github.javlock.pase.web.crawler.data.UrlData;
 
 import lombok.Getter;
 

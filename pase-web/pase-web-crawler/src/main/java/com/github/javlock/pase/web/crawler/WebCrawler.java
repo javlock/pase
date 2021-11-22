@@ -7,15 +7,18 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
 
-import com.github.javlock.pase.web.crawler.data.Packet;
-import com.github.javlock.pase.web.crawler.data.SavePacket;
-import com.github.javlock.pase.web.crawler.data.UrlData;
+import com.github.javlock.pase.libs.api.instance.PaseApp;
+import com.github.javlock.pase.libs.data.web.UrlData;
+import com.github.javlock.pase.libs.network.Packet;
+import com.github.javlock.pase.libs.network.data.DataPacket;
+import com.github.javlock.pase.libs.network.data.DataPacket.ACTIONTYPE;
+import com.github.javlock.pase.libs.network.data.DataPacket.PACKETTYPE;
+import com.github.javlock.pase.libs.utils.web.url.UrlUtils;
 import com.github.javlock.pase.web.crawler.engine.filter.FilterEngine;
 import com.github.javlock.pase.web.crawler.interfaces.UrlActionInterface;
 import com.github.javlock.pase.web.crawler.interfaces.WorkerEventInterface;
 import com.github.javlock.pase.web.crawler.network.handler.ObjectHandlerClient;
 import com.github.javlock.pase.web.crawler.storage.Storage;
-import com.github.javlock.pase.web.crawler.utils.url.UrlUtils;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
@@ -30,12 +33,13 @@ import io.netty.handler.codec.serialization.ObjectEncoder;
 import lombok.Getter;
 
 public class WebCrawler extends Thread {
-
 	public static void main(String[] args) throws IOException {
 		WebCrawler webCrawler = new WebCrawler();
 		webCrawler.init();
 		webCrawler.start();
 	}
+
+	private final @Getter PaseApp paseApp = new PaseApp();
 
 	public final UrlActionInterface urlDetected = new UrlActionInterface() {
 
@@ -98,21 +102,21 @@ public class WebCrawler extends Thread {
 			storage.getWorkers().remove(url, webCrawlerWorker);
 
 			if (parsedAdded) {
-				SavePacket packet = new SavePacket();
-
 				UrlData forSendUrlData = new UrlData().setUrl(urlWithOutSession)
 						.setDomain(UrlUtils.getDomainByUrl(urlWithOutSession)).build();
 
 				forSendUrlData.setPageType(urldata.getPageType());
 				forSendUrlData.setTitle(urldata.getTitle());
+				forSendUrlData.setTime(urldata.getTime());
+				forSendUrlData.setStatusCode(urldata.getStatusCode());
 
-				packet.setData(forSendUrlData);
-				send(packet);
+				send(new DataPacket().setType(PACKETTYPE.REQUEST).setAction(ACTIONTYPE.SAVE).setData(forSendUrlData)
+						.check());
 			}
 		}
 
 	};
-
+	private WebCrawler instanceCrawler = this;
 	private final @Getter Storage storage = new Storage(this);
 
 	private int maxThread = 25;
@@ -176,14 +180,13 @@ public class WebCrawler extends Thread {
 								ClassResolvers.softCachingConcurrentResolver(Packet.class.getClassLoader())));
 						p.addLast(new ObjectEncoder());
 
-						p.addLast(new ObjectHandlerClient());
+						p.addLast(new ObjectHandlerClient(instanceCrawler));
 
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				}
 			});
-
 			String host = "127.0.0.1";
 			int port = 6000;
 			future = bootstrap.connect(host, port).awaitUninterruptibly();
