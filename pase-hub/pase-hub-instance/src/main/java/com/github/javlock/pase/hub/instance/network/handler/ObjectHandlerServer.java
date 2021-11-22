@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.javlock.pase.hub.instance.PaseHub;
 import com.github.javlock.pase.libs.api.instance.PaseApp;
+import com.github.javlock.pase.libs.data.web.UpdatedUrlData;
 import com.github.javlock.pase.libs.data.web.UrlData;
 import com.github.javlock.pase.libs.network.PaseAppInitPacket;
 import com.github.javlock.pase.libs.network.PaseObjectHandler;
@@ -56,6 +57,13 @@ public class ObjectHandlerServer extends PaseObjectHandler {
 			hub.broadcast(ctx, (Serializable) msg);
 			return;
 		}
+		if (msg instanceof UpdatedUrlData updatedData) {
+			UrlData urldata = updatedData.getNewData();
+			hub.getDb().saveUrlData(urldata);
+			// TODO other
+			return;
+		}
+
 		LOGGER.info("msg class:[{}] data:[{}]", msg.getClass().getSimpleName(), msg);
 	}
 

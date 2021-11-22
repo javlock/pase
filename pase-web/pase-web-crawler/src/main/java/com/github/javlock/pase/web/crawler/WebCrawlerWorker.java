@@ -81,8 +81,9 @@ public class WebCrawlerWorker extends Thread {
 				e.printStackTrace();
 			}
 		}
-
-		workerEventInterface.endScan(this);
+		if (workerEventInterface != null) {
+			workerEventInterface.endScan(this);
+		}
 	}
 
 }

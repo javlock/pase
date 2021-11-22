@@ -1,10 +1,12 @@
 package com.github.javlock.pase.web.crawler.network.handler;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.javlock.pase.libs.data.web.UpdatedUrlData;
 import com.github.javlock.pase.libs.data.web.UrlData;
 import com.github.javlock.pase.libs.network.PaseObjectHandler;
 import com.github.javlock.pase.libs.network.data.DataPacket;
@@ -43,9 +45,16 @@ public class ObjectHandlerClient extends PaseObjectHandler {
 				if (action.equals(ACTIONTYPE.UPDATE)) {
 					if (data instanceof UrlData urldata) {
 						urldata.build();
-						// TODO СДЕЛАТЬ ПРОВЕРКУ ВРЕМЕНИ
-
-						crawler.getStorage().appendNew(urldata);
+						new Thread(() -> {
+							try {
+								Optional<UpdatedUrlData> updatedUrlDataoOptional = crawler.updateURL(urldata);
+								if (updatedUrlDataoOptional.isPresent()) {
+									ctx.writeAndFlush(updatedUrlDataoOptional.get());
+								}
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						}).start();
 						return;
 					} else {
 						LOGGER.info("data class:[{}] data:[{}]", data.getClass().getSimpleName(), data);

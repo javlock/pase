@@ -162,7 +162,6 @@ public class DataBase {
 		}
 		if (updated) {
 			urlDAO.update(fromDb);
-			LOGGER.info("updated:{}", fromDb);
 		}
 	}
 
