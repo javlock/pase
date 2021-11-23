@@ -8,6 +8,9 @@ import com.github.javlock.pase.libs.data.web.UrlData;
 import com.github.javlock.pase.web.crawler.WebCrawler;
 import com.github.javlock.pase.web.crawler.storage.Storage;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+@SuppressFBWarnings(value = { "EI_EXPOSE_REP", "EI_EXPOSE_REP2" })
 public class FilterEngine {
 
 	private WebCrawler crawler;

@@ -3,6 +3,9 @@ package com.github.javlock.pase.hub.instance.service;
 import com.github.javlock.pase.hub.instance.PaseHub;
 import com.github.javlock.pase.hub.instance.db.DataBase;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+@SuppressFBWarnings(value = { "EI_EXPOSE_REP2" })
 public class ConfigurationUpdater extends Thread {
 	private PaseHub hub;
 

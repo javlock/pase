@@ -24,6 +24,7 @@ import com.github.javlock.pase.web.crawler.interfaces.WorkerEventInterface;
 import com.github.javlock.pase.web.crawler.network.handler.ObjectHandlerClient;
 import com.github.javlock.pase.web.crawler.storage.Storage;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -36,6 +37,7 @@ import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 import lombok.Getter;
 
+@SuppressFBWarnings(value = { "EI_EXPOSE_REP", "EI_EXPOSE_REP2", "AT_OPERATION_SEQUENCE_ON_CONCURRENT_ABSTRACTION" })
 public class WebCrawler extends Thread {
 	public static void main(String[] args) throws IOException {
 		WebCrawler webCrawler = new WebCrawler();
@@ -224,6 +226,7 @@ public class WebCrawler extends Thread {
 						&& !storage.getWorkers().containsKey(url)
 				// if
 				) {
+
 					WebCrawlerWorker worker = new WebCrawlerWorker();
 					worker.setName(url);
 					worker.setUrlData(urlData);
@@ -268,8 +271,22 @@ public class WebCrawler extends Thread {
 		worker.setUrlDetected(new UrlActionInterface() {
 
 			@Override
-			public void detected(UrlData url, String newUrl) {
-				updatedUrlData.getDetected().add(newUrl);
+			public void detected(UrlData parent, String data) {
+				if (data == null || data.trim().isEmpty()) {
+					return;
+				}
+				if (data.trim().startsWith("mailto")) { // check mail
+					mailDetected(parent, data);
+				} else {
+					// check data
+					// withOutSession
+					String withOutSession = UrlUtils.getUrlWithOutSession(data);
+					UrlData newData = new UrlData().setUrl(data).setDomain(UrlUtils.getDomainByUrl(withOutSession))
+							.build();
+					// append to list
+					updatedUrlData.getDetected().add(newData);
+				}
+
 			}
 
 			@Override

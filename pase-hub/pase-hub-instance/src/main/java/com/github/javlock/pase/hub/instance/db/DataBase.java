@@ -17,6 +17,9 @@ import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.Where;
 import com.j256.ormlite.table.TableUtils;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+@SuppressFBWarnings(value = { "EI_EXPOSE_REP2" })
 public class DataBase {
 	private static final Logger LOGGER = LoggerFactory.getLogger("DataBase");
 	private PaseHub hub;
@@ -133,27 +136,27 @@ public class DataBase {
 			if (fdbTitle == null) {
 				fromDb.setTitle(uTitle);
 				updated = true;
-			} else if (fdbTitle != null && !fdbTitle.equals(uTitle)) {
+			}
+			if (fdbTitle != null && !fdbTitle.equals(uTitle)) {
 				fromDb.setTitle(uTitle);
 				updated = true;
 			}
 		}
 
-		if (
-		// null
-
-		(fromDb.getTitle() == null && urldata.getTitle() != null)
-				// no null but !equals
-				|| (fromDb.getTitle() != null && !urldata.getTitle().equals(fromDb.getTitle()))) {
-			fromDb.setTitle(urldata.getTitle());
-			updated = true;
-		}
 		// TIME
-		if ((fromDb.getTime() == null && urldata.getTime() != null)
-				|| (fromDb.getTime() != null && urldata.getTime() > fromDb.getTime())) {
-			fromDb.setTime(urldata.getTime());
-			updated = true;
+		Long fTime = fromDb.getTime();
+		Long uTime = urldata.getTime();
+		if (uTime != null) {
+			if (fTime == null) {
+				fromDb.setTime(uTime);
+				updated = true;
+			}
+			if (fTime != null && (uTime > fTime)) {
+				fromDb.setTime(uTime);
+				updated = true;
+			}
 		}
+
 		// LAST >STATUSCODE<
 		if (fromDb.getStatusCode() != urldata.getStatusCode()) {
 			fromDb.setStatusCode(urldata.getStatusCode());

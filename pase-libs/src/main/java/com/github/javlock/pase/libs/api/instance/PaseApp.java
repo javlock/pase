@@ -10,8 +10,10 @@ import javax.management.openmbean.KeyAlreadyExistsException;
 import com.github.javlock.pase.libs.api.instance.Parameter.PARAMETERFIELDS;
 import com.github.javlock.pase.libs.api.instance.Parameter.PaseAppType;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 
+@SuppressFBWarnings(value = { "EI_EXPOSE_REP" })
 public class PaseApp {
 
 	private @Getter ConcurrentHashMap<String, Parameter> parametersMap = new ConcurrentHashMap<>();

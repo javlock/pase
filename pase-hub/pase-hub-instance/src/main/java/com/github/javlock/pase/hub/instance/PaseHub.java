@@ -27,6 +27,7 @@ import com.github.javlock.pase.libs.network.data.DataPacket.ACTIONTYPE;
 import com.github.javlock.pase.libs.network.data.DataPacket.PACKETTYPE;
 import com.github.javlock.pase.libs.utils.io.IOUtils;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
@@ -42,6 +43,7 @@ import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 import lombok.Getter;
 
+@SuppressFBWarnings(value = { "EI_EXPOSE_REP", "EI_EXPOSE_REP2" })
 public class PaseHub extends Thread {
 	private static final Logger LOGGER = LoggerFactory.getLogger("PaseHub");
 

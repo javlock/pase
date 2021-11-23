@@ -21,9 +21,11 @@ import com.github.javlock.pase.libs.utils.web.url.UrlUtils;
 import com.github.javlock.pase.web.crawler.interfaces.UrlActionInterface;
 import com.github.javlock.pase.web.crawler.interfaces.WorkerEventInterface;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 import lombok.Setter;
 
+@SuppressFBWarnings(value = { "EI_EXPOSE_REP", "EI_EXPOSE_REP2" })
 public class WebCrawlerWorker extends Thread {
 	private static final Logger LOGGER = LoggerFactory.getLogger("WebCrawlerWorker");
 	private @Getter @Setter Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", 9050));

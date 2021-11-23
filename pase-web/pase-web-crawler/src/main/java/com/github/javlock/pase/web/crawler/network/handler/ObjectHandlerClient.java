@@ -14,8 +14,10 @@ import com.github.javlock.pase.libs.network.data.DataPacket.ACTIONTYPE;
 import com.github.javlock.pase.libs.network.data.DataPacket.PACKETTYPE;
 import com.github.javlock.pase.web.crawler.WebCrawler;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.channel.ChannelHandlerContext;
 
+@SuppressFBWarnings(value = { "EI_EXPOSE_REP", "EI_EXPOSE_REP2" })
 public class ObjectHandlerClient extends PaseObjectHandler {
 	private static final Logger LOGGER = LoggerFactory.getLogger("ObjectHandlerClient");
 
@@ -37,17 +39,21 @@ public class ObjectHandlerClient extends PaseObjectHandler {
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		if (msg instanceof DataPacket dataPacket) {
-			PACKETTYPE type = dataPacket.getType();
-			Serializable data = dataPacket.getData();
-			ACTIONTYPE action = dataPacket.getAction();
+		if (msg instanceof DataPacket) {
+			DataPacket dataPacketObj = (DataPacket) msg;
+
+			PACKETTYPE type = dataPacketObj.getType();
+			Serializable data = dataPacketObj.getData();
+			ACTIONTYPE action = dataPacketObj.getAction();
+
 			if (type.equals(PACKETTYPE.REQUEST)) {
 				if (action.equals(ACTIONTYPE.UPDATE)) {
-					if (data instanceof UrlData urldata) {
-						urldata.build();
+					if (data instanceof UrlData) {
+						UrlData urldataObj = (UrlData) data;
+						urldataObj.build();
 						new Thread(() -> {
 							try {
-								Optional<UpdatedUrlData> updatedUrlDataoOptional = crawler.updateURL(urldata);
+								Optional<UpdatedUrlData> updatedUrlDataoOptional = crawler.updateURL(urldataObj);
 								if (updatedUrlDataoOptional.isPresent()) {
 									ctx.writeAndFlush(updatedUrlDataoOptional.get());
 								}
