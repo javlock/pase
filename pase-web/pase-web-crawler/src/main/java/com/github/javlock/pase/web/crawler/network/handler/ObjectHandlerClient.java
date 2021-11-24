@@ -6,8 +6,10 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.javlock.pase.libs.data.RegExData;
 import com.github.javlock.pase.libs.data.web.UpdatedUrlData;
 import com.github.javlock.pase.libs.data.web.UrlData;
+import com.github.javlock.pase.libs.network.ConfigurationUpdatePacket;
 import com.github.javlock.pase.libs.network.PaseObjectHandler;
 import com.github.javlock.pase.libs.network.data.DataPacket;
 import com.github.javlock.pase.libs.network.data.DataPacket.ACTIONTYPE;
@@ -69,6 +71,17 @@ public class ObjectHandlerClient extends PaseObjectHandler {
 
 			}
 
+		}
+		if (msg instanceof ConfigurationUpdatePacket) {
+			ConfigurationUpdatePacket configurationUpdatePacket = (ConfigurationUpdatePacket) msg;
+
+			for (RegExData regExData : configurationUpdatePacket.getFilterRegExDatas()) {
+				crawler.filter.updateFilter(regExData);
+			}
+			if (configurationUpdatePacket.getThreadMax() != null) {
+				crawler.setMaxThread(configurationUpdatePacket.getThreadMax());
+			}
+			return;
 		}
 
 		LOGGER.info("msg class:[{}] msg:[{}]", msg.getClass().getSimpleName(), msg);

@@ -15,7 +15,7 @@ import lombok.NonNull;
 public class UrlUtils {
 
 	public enum SESSIONKEYS {
-		SID;
+		SID, PHPSESSID;
 
 		static boolean containsKey(String inputKey) {
 			String keyUC = inputKey.toUpperCase();
@@ -24,9 +24,9 @@ public class UrlUtils {
 					return true;
 				}
 			}
-
 			return false;
 		}
+
 	}
 
 	private static final String ABSHREF = "abs:href";
@@ -38,7 +38,10 @@ public class UrlUtils {
 		final Matcher matcher = pattern.matcher(url);
 		String group = null;
 		while (matcher.find()) {
-			group = matcher.group(1);
+			group = matcher.group(1);// 1
+			if (group != null) {
+				break;
+			}
 		}
 		if (group == null) {
 			throw new IllegalArgumentException(String.format("group(1)==null for url:[%s]", url));

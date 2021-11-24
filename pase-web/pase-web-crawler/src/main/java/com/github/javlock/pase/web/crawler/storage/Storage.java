@@ -53,9 +53,6 @@ public class Storage {
 		}
 	}
 
-	private @Getter CopyOnWriteArrayList<String> forbidden = new CopyOnWriteArrayList<>();
-	private @Getter CopyOnWriteArrayList<String> allow = new CopyOnWriteArrayList<>();
-
 	private @Getter ConcurrentHashMap<String, WebCrawlerWorker> workers = new ConcurrentHashMap<>();
 
 	private final ConcurrentHashMap<String, StorageElement> urlMap = new ConcurrentHashMap<>();
@@ -72,6 +69,7 @@ public class Storage {
 
 		// filter
 		if (!crawler.filter.check(data)) {
+			crawler.urlDetected.forbidden(data);
 			return;
 		}
 

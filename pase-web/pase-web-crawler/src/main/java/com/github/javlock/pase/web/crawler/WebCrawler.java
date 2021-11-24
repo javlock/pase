@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.LoggerFactory;
 
 import com.github.javlock.pase.libs.api.instance.PaseApp;
+import com.github.javlock.pase.libs.data.RegExData;
 import com.github.javlock.pase.libs.data.web.UpdatedUrlData;
 import com.github.javlock.pase.libs.data.web.UrlData;
 import com.github.javlock.pase.libs.network.Packet;
@@ -36,6 +37,7 @@ import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 import lombok.Getter;
+import lombok.Setter;
 
 @SuppressFBWarnings(value = { "EI_EXPOSE_REP", "EI_EXPOSE_REP2", "AT_OPERATION_SEQUENCE_ON_CONCURRENT_ABSTRACTION" })
 public class WebCrawler extends Thread {
@@ -118,11 +120,11 @@ public class WebCrawler extends Thread {
 	private WebCrawler instanceCrawler = this;
 	private final @Getter Storage storage = new Storage(this);
 
-	private int maxThread = 25;
+	private @Getter @Setter int maxThread = 25;
 	private File inputFile = new File("input_url");
 	private File inputFileAllow = new File("input_allow");
 	private File inputFileForb = new File("input_forb");
-	public final FilterEngine filter = new FilterEngine(this);
+	public final FilterEngine filter = new FilterEngine();
 
 	private Bootstrap bootstrap;
 
@@ -146,12 +148,18 @@ public class WebCrawler extends Thread {
 
 		List<String> listInputAllow = Files.readAllLines(inputFileAllow.toPath(), StandardCharsets.UTF_8);
 		for (String allowRegEx : listInputAllow) {
-			storage.getAllow().addIfAbsent(allowRegEx);
+			RegExData regExdata = new RegExData().setRegEx(allowRegEx).setAllow(true).setEnabled(true).build();
+
+			filter.getAllow().put(regExdata.getId(), regExdata);
+			filter.updateFilter();
 		}
 
 		List<String> listInputForb = Files.readAllLines(inputFileForb.toPath(), StandardCharsets.UTF_8);
 		for (String forbRegEx : listInputForb) {
-			storage.getForbidden().addIfAbsent(forbRegEx);
+			RegExData regExdata = new RegExData().setRegEx(forbRegEx).setDeny(true).setEnabled(true).build();
+
+			filter.getForbidden().put(regExdata.getId(), regExdata);
+			filter.updateFilter();
 		}
 
 		List<String> listInput = Files.readAllLines(inputFile.toPath(), StandardCharsets.UTF_8);
@@ -161,6 +169,9 @@ public class WebCrawler extends Thread {
 			}
 			UrlData testData = new UrlData().setUrl(string).setDomain(UrlUtils.getDomainByUrl(string)).build();
 			storage.appendNew(testData);
+
+			send(new DataPacket().setType(PACKETTYPE.REQUEST).setAction(ACTIONTYPE.SAVE).setData(testData).check());
+
 		}
 	}
 
@@ -291,11 +302,15 @@ public class WebCrawler extends Thread {
 
 			@Override
 			public void fileDetected(UrlData fileUrl) {
+				String withOutSession = UrlUtils.getUrlWithOutSession(fileUrl.getUrl());
+				fileUrl = fileUrl.setUrl(withOutSession).setDomain(UrlUtils.getDomainByUrl(withOutSession)).build();
 				updatedUrlData.getFileDetected().add(fileUrl);
 			}
 
 			@Override
 			public void forbidden(UrlData data) {
+				String withOutSession = UrlUtils.getUrlWithOutSession(data.getUrl());
+				data = data.setUrl(withOutSession).setDomain(UrlUtils.getDomainByUrl(withOutSession)).build();
 				updatedUrlData.getForbidden().add(data);
 			}
 
@@ -306,6 +321,8 @@ public class WebCrawler extends Thread {
 
 			@Override
 			public void notFound(UrlData url) {
+				String withOutSession = UrlUtils.getUrlWithOutSession(url.getUrl());
+				url = url.setUrl(withOutSession).setDomain(UrlUtils.getDomainByUrl(withOutSession)).build();
 				updatedUrlData.getNotFound().add(url);
 			}
 		});

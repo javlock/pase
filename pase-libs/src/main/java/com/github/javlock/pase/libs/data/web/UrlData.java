@@ -21,7 +21,7 @@ public class UrlData implements Serializable {
 	private @Getter @DatabaseField(width = 2400) String domain;
 	private @Getter @DatabaseField(width = 2400) String url;
 	private @Getter @Setter @DatabaseField(width = 2400) String title;
-	private @Getter @Setter @DatabaseField Long time;
+	private @Getter @Setter @DatabaseField Long time = -1L;
 	private @Getter @Setter @DatabaseField int statusCode;
 	private @Getter boolean builded = false;
 	private @Getter @Setter @DatabaseField URLTYPE pageType = URLTYPE.UKNOWN;

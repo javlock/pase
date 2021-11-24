@@ -18,6 +18,7 @@ import com.github.javlock.pase.hub.instance.db.DataBase;
 import com.github.javlock.pase.hub.instance.network.handler.ObjectHandlerServer;
 import com.github.javlock.pase.hub.instance.service.ConfigurationUpdater;
 import com.github.javlock.pase.hub.instance.storage.PaseHubStorage;
+import com.github.javlock.pase.libs.Balancer;
 import com.github.javlock.pase.libs.api.instance.Parameter;
 import com.github.javlock.pase.libs.api.instance.PaseApp;
 import com.github.javlock.pase.libs.data.web.UrlData;
@@ -26,6 +27,7 @@ import com.github.javlock.pase.libs.network.data.DataPacket;
 import com.github.javlock.pase.libs.network.data.DataPacket.ACTIONTYPE;
 import com.github.javlock.pase.libs.network.data.DataPacket.PACKETTYPE;
 import com.github.javlock.pase.libs.utils.io.IOUtils;
+import com.github.javlock.pase.web.crawler.engine.filter.FilterEngine;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.bootstrap.ServerBootstrap;
@@ -54,9 +56,13 @@ public class PaseHub extends Thread {
 		hub.join();
 	}
 
-	private final @Getter PaseApp paseApp = new PaseApp();
+	private PaseHub instanceHub = this;
 
-	PaseHub instanceHub = this;
+	private final @Getter PaseApp paseApp = new PaseApp();
+	private final @Getter FilterEngine filterEngine = new FilterEngine();
+
+	private final @Getter Balancer balancer = new Balancer();
+
 	private final @Getter PaseHubStorage storage = new PaseHubStorage();
 	private final @Getter DataBase db = new DataBase(instanceHub);
 
@@ -84,6 +90,12 @@ public class PaseHub extends Thread {
 			if (ctx != null && context.equals(ctx)) {
 				continue;
 			}
+			if (balancer.getObjCount() >= balancer.getObjCountMax()) {
+				System.gc();
+				LOGGER.info("gc {}", System.currentTimeMillis() / 1000);
+				balancer.setObjCount(0);
+			}
+			balancer.setObjCount(balancer.getObjCount() + 1);
 			context.writeAndFlush(msg);
 		}
 	}
@@ -102,6 +114,8 @@ public class PaseHub extends Thread {
 		}
 
 		paseApp.appType(Parameter.PaseAppType.HUB).version(version).init();
+
+		balancer.setObjCountMax(10000);
 
 		db.init();
 		initNetwork();
@@ -144,7 +158,9 @@ public class PaseHub extends Thread {
 		bindChannelFuture = serverBootstrap.bind();
 
 		do {
+
 			try {
+
 				// FILES
 				List<UrlData> links = db.getUrlFilesNoParsed();
 				System.err.println(links.size());
@@ -157,6 +173,7 @@ public class PaseHub extends Thread {
 			try {
 				List<UrlData> urlTimeExceeded = db.getUrlTimeExceeded();
 				for (UrlData urlData : urlTimeExceeded) {
+
 					broadcast(null, new DataPacket()
 							//
 							.setData(urlData).setType(PACKETTYPE.REQUEST).setAction(ACTIONTYPE.UPDATE)
