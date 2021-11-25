@@ -13,7 +13,7 @@ import lombok.Setter;
 @DatabaseTable(tableName = "urls")
 public class UrlData implements Serializable {
 	public enum URLTYPE {
-		PAGE, FILE, UKNOWN;
+		PAGE, FILE, UKNOWN, NOTGETTED, SOCKETTIMEOUTEXCEPTION, SOCKETEXCEPTION, SSLHANDSHAKEEXCEPTION;
 	}
 
 	private static final long serialVersionUID = 4979287113557476414L;

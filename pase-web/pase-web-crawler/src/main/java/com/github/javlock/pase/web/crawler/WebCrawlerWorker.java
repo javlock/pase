@@ -71,8 +71,11 @@ public class WebCrawlerWorker extends Thread {
 					}
 				}
 
-			} catch (SocketTimeoutException | SocketException e) {
-				// IGNORE
+			} catch (SocketTimeoutException e) {
+				urlData.setPageType(URLTYPE.SOCKETTIMEOUTEXCEPTION);
+			} catch (SocketException e) {
+				urlData.setPageType(URLTYPE.SOCKETEXCEPTION);
+				e.printStackTrace();
 			} catch (HttpStatusException e) {
 				int status = e.getStatusCode();
 				if (status == 429) {
@@ -95,6 +98,7 @@ public class WebCrawlerWorker extends Thread {
 				urlData.setPageType(URLTYPE.FILE);
 				urlDetected.fileDetected(urlData);
 			} catch (javax.net.ssl.SSLHandshakeException e) {
+				urlData.setPageType(URLTYPE.SSLHANDSHAKEEXCEPTION);
 				try {
 					File dir = new File("error", "ssl");
 					if (!dir.exists()) {
