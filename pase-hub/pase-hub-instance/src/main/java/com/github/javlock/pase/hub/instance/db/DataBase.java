@@ -11,6 +11,7 @@ import com.github.javlock.pase.hub.instance.PaseHub;
 import com.github.javlock.pase.hub.instance.config.db.DataBaseConfig;
 import com.github.javlock.pase.libs.data.RegExData;
 import com.github.javlock.pase.libs.data.web.UrlData;
+import com.github.javlock.pase.libs.data.web.UrlData.URLTYPE;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcPooledConnectionSource;
@@ -79,6 +80,24 @@ public class DataBase {
 				// TODO отсеять уже разобранные файлы
 			}
 
+		}
+
+		return resp;
+	}
+
+	public List<UrlData> getUrlNew() throws SQLException {
+		ArrayList<UrlData> resp = new ArrayList<>();
+		QueryBuilder<UrlData, Integer> queryBuilder = urlDAO.queryBuilder();
+		Where<UrlData, Integer> where = queryBuilder.where();
+
+		where.eq(PAGE_TYPE, UrlData.URLTYPE.UKNOWN);
+		queryBuilder.limit(300L);
+
+		List<UrlData> listUrls = queryBuilder.query();
+		for (UrlData urlData : listUrls) {
+			if (hub.getFilterEngine().check(urlData)) {
+				resp.add(urlData);
+			}
 		}
 
 		return resp;
@@ -163,7 +182,7 @@ public class DataBase {
 		boolean updated = false;
 
 		// PAGETYPE
-		if (fromDb.getPageType() != urldata.getPageType()) {
+		if (fromDb.getPageType() != urldata.getPageType() && !urldata.getPageType().equals(URLTYPE.UKNOWN)) {
 			fromDb.setPageType(urldata.getPageType());
 			updated = true;
 		}

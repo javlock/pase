@@ -3,6 +3,7 @@ package com.github.javlock.pase.libs.data.web;
 import java.io.Serializable;
 import java.util.Objects;
 
+import com.github.javlock.pase.libs.utils.web.url.UrlUtils;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
@@ -27,6 +28,9 @@ public class UrlData implements Serializable {
 	private @Getter @Setter @DatabaseField URLTYPE pageType = URLTYPE.UKNOWN;
 
 	public UrlData build() {
+		url = UrlUtils.getUrlWithOutSession(url);
+		domain = UrlUtils.getDomainByUrl(url);
+
 		if (domain == null) {
 			throw new IllegalArgumentException(String.format("UrlData.build():%s", url));
 		}

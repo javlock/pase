@@ -170,6 +170,8 @@ public class PaseHub extends Thread {
 			} catch (SQLException e1) {
 				e1.printStackTrace();
 			}
+
+			// URL UPDATE
 			try {
 				List<UrlData> urlTimeExceeded = db.getUrlTimeExceeded();
 				for (UrlData urlData : urlTimeExceeded) {
@@ -179,6 +181,22 @@ public class PaseHub extends Thread {
 							.setData(urlData).setType(PACKETTYPE.REQUEST).setAction(ACTIONTYPE.UPDATE)
 							//
 							.check());
+				}
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+
+			// URL NEW
+
+			try {
+				List<UrlData> urlTimeExceeded = db.getUrlNew();
+				for (UrlData urlData : urlTimeExceeded) {
+					broadcast(null, new DataPacket()
+							//
+							.setData(urlData).setType(PACKETTYPE.REQUEST).setAction(ACTIONTYPE.UPDATE)
+							//
+							.check());
+
 				}
 			} catch (SQLException e1) {
 				e1.printStackTrace();

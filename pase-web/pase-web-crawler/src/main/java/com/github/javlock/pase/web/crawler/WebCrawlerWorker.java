@@ -1,10 +1,13 @@
 package com.github.javlock.pase.web.crawler;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 
 import org.jsoup.Connection.Response;
@@ -36,15 +39,27 @@ public class WebCrawlerWorker extends Thread {
 
 	@Override
 	public void run() {
-		retStatusCode: {
+		boolean needgoto = true;
 
-			Response resp = null;
+		LOGGER.error("-----0 {}", urlData.getPageType());
+		retStatusCode: {
+			LOGGER.error("-----1 {}", urlData.getPageType());
+
 			try {
+				LOGGER.error("-----1.1 {}", urlData.getPageType());
 				urlData.setTime(System.currentTimeMillis() / 1000);
-				resp = Jsoup.connect(urlData.getUrl()).proxy(proxy).userAgent("Mozilla").execute();
+				LOGGER.error("-----1.2 {}", urlData.getPageType());
+				Response resp = Jsoup.connect(urlData.getUrl()).proxy(proxy).userAgent("Mozilla").execute();
+
+				LOGGER.error("-----2 {}", urlData.getPageType());
 				Document doc = resp.parse();
+				LOGGER.error("-----3 {}", urlData.getPageType());
+
 				urlData.setStatusCode(resp.statusCode());
+				LOGGER.error("-----4 {}", urlData.getPageType());
 				urlData.setPageType(URLTYPE.PAGE);
+				LOGGER.error("-----5 {}", urlData.getPageType());
+
 				urlData.setTitle(doc.title());
 
 				List<String> list = UrlUtils.parseDocByElementToList(doc);
@@ -79,10 +94,27 @@ public class WebCrawlerWorker extends Thread {
 			} catch (UnsupportedMimeTypeException e) {
 				urlData.setPageType(URLTYPE.FILE);
 				urlDetected.fileDetected(urlData);
+			} catch (javax.net.ssl.SSLHandshakeException e) {
+				try {
+					File dir = new File("error", "ssl");
+					if (!dir.exists()) {
+						dir.mkdirs();
+					}
+					File logFile = new File(dir, urlData.getDomain().toUpperCase().trim());
+					if (!logFile.exists()) {
+						Files.createFile(logFile.toPath());
+					}
+					Files.writeString(logFile.toPath(), urlData.getDomain() + "\n", StandardOpenOption.APPEND);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+
 		}
+
 		if (workerEventInterface != null) {
 			workerEventInterface.endScan(this);
 		}

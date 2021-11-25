@@ -1,5 +1,6 @@
 package com.github.javlock.pase.web.crawler.engine.filter;
 
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -20,10 +21,6 @@ public class FilterEngine {
 
 	private @Getter ConcurrentHashMap<String, RegExData> forbidden = new ConcurrentHashMap<>();
 	private @Getter ConcurrentHashMap<String, RegExData> allow = new ConcurrentHashMap<>();
-
-	// private @Getter CopyOnWriteArrayList<RegExData> forbidden = new
-	// CopyOnWriteArrayList<>();
-//	private @Getter CopyOnWriteArrayList<RegExData> allow = new CopyOnWriteArrayList<>();
 
 	public boolean check(UrlData data) {
 		String domain = data.getDomain();
@@ -47,7 +44,8 @@ public class FilterEngine {
 					return true;
 				}
 				for (int i = 1; i <= matcher.groupCount(); i++) {
-					System.out.println("Group " + i + ": " + matcher.group(i));
+					String groupI = matcher.group(i);
+					LOGGER.info("Group {}: {}", i, groupI);
 				}
 			}
 		}
@@ -65,6 +63,14 @@ public class FilterEngine {
 		}
 	}
 
+	public void updateFilter(List<RegExData> filterRegExDatas) {
+		allow.clear();
+		forbidden.clear();
+		for (RegExData regExData : filterRegExDatas) {
+			updateFilter(regExData);
+		}
+	}
+
 	public void updateFilter(RegExData regExData) {
 		if (regExData.isEnabled()) {
 			if (regExData.isDeny()) {
@@ -79,7 +85,7 @@ public class FilterEngine {
 				allow.remove(regExData.getId(), regExData);
 			}
 		}
-		LOGGER.info(regExData.toString());
+		LOGGER.info("{}", regExData);
 	}
 
 }

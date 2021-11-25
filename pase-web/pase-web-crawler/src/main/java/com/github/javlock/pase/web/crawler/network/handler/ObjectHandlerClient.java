@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.javlock.pase.libs.data.RegExData;
 import com.github.javlock.pase.libs.data.web.UpdatedUrlData;
 import com.github.javlock.pase.libs.data.web.UrlData;
 import com.github.javlock.pase.libs.network.ConfigurationUpdatePacket;
@@ -57,7 +56,40 @@ public class ObjectHandlerClient extends PaseObjectHandler {
 							try {
 								Optional<UpdatedUrlData> updatedUrlDataoOptional = crawler.updateURL(urldataObj);
 								if (updatedUrlDataoOptional.isPresent()) {
-									ctx.writeAndFlush(updatedUrlDataoOptional.get());
+									UpdatedUrlData val = updatedUrlDataoOptional.get();
+
+									LOGGER.info("");
+									LOGGER.info("");
+									LOGGER.info("");
+									LOGGER.info("");
+									LOGGER.info("");
+									LOGGER.info("");
+									LOGGER.info("");
+
+									StringBuilder builder = new StringBuilder();
+									builder.append("data:").append(val.getNewData()).append('\n');
+
+									for (UrlData detected : val.getDetected()) {
+										builder.append("detected:").append(detected).append('\n');
+									}
+									for (UrlData fileDetected : val.getFileDetected()) {
+										builder.append("fileDetected:").append(fileDetected).append('\n');
+
+									}
+									for (UrlData forbidden : val.getForbidden()) {
+										builder.append("forbidden:").append(forbidden).append('\n');
+
+									}
+									for (String mailDetected : val.getMailDetected()) {
+										builder.append("mailDetected:").append(mailDetected).append('\n');
+
+									}
+									for (UrlData notfound : val.getNotFound()) {
+										builder.append("notfound:").append(notfound).append('\n');
+									}
+									LOGGER.info("{}", builder);
+
+									ctx.writeAndFlush(val);
 								}
 							} catch (InterruptedException e) {
 								e.printStackTrace();
@@ -75,8 +107,8 @@ public class ObjectHandlerClient extends PaseObjectHandler {
 		if (msg instanceof ConfigurationUpdatePacket) {
 			ConfigurationUpdatePacket configurationUpdatePacket = (ConfigurationUpdatePacket) msg;
 
-			for (RegExData regExData : configurationUpdatePacket.getFilterRegExDatas()) {
-				crawler.filter.updateFilter(regExData);
+			if (!configurationUpdatePacket.getFilterRegExDatas().isEmpty()) {
+				crawler.filter.updateFilter(configurationUpdatePacket.getFilterRegExDatas());
 			}
 			if (configurationUpdatePacket.getThreadMax() != null) {
 				crawler.setMaxThread(configurationUpdatePacket.getThreadMax());

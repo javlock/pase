@@ -168,8 +168,6 @@ public class WebCrawler extends Thread {
 				continue;
 			}
 			UrlData testData = new UrlData().setUrl(string).setDomain(UrlUtils.getDomainByUrl(string)).build();
-			storage.appendNew(testData);
-
 			send(new DataPacket().setType(PACKETTYPE.REQUEST).setAction(ACTIONTYPE.SAVE).setData(testData).check());
 
 		}
@@ -267,10 +265,13 @@ public class WebCrawler extends Thread {
 		if (updateWorkers.containsKey(url)) {
 			return Optional.empty();
 		}
-
 		if (updateWorkers.size() >= maxThread) {
 			return Optional.empty();
 		}
+		if (!filter.check(urldata)) {
+			return Optional.empty();
+		}
+
 		LoggerFactory.getLogger("updateURL").info("for {}", url);
 
 		WebCrawlerWorker worker = new WebCrawlerWorker();
@@ -331,6 +332,7 @@ public class WebCrawler extends Thread {
 		worker.join();
 
 		updatedUrlData.setNewData(worker.getUrlData());
+
 		updateWorkers.remove(url);
 
 		return Optional.of(updatedUrlData);
