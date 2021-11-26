@@ -90,12 +90,7 @@ public class PaseHub extends Thread {
 			if (ctx != null && context.equals(ctx)) {
 				continue;
 			}
-			if (balancer.getObjCount() >= balancer.getObjCountMax()) {
-				System.gc();
-				LOGGER.info("gc {}", System.currentTimeMillis() / 1000);
-				balancer.setObjCount(0);
-			}
-			balancer.setObjCount(balancer.getObjCount() + 1);
+			balancer.netxtObj();
 			context.writeAndFlush(msg);
 		}
 	}

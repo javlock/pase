@@ -41,25 +41,13 @@ public class WebCrawlerWorker extends Thread {
 	public void run() {
 		boolean needgoto = true;
 
-		LOGGER.error("-----0 {}", urlData.getPageType());
 		retStatusCode: {
-			LOGGER.error("-----1 {}", urlData.getPageType());
-
 			try {
-				LOGGER.error("-----1.1 {}", urlData.getPageType());
 				urlData.setTime(System.currentTimeMillis() / 1000);
-				LOGGER.error("-----1.2 {}", urlData.getPageType());
 				Response resp = Jsoup.connect(urlData.getUrl()).proxy(proxy).userAgent("Mozilla").execute();
-
-				LOGGER.error("-----2 {}", urlData.getPageType());
 				Document doc = resp.parse();
-				LOGGER.error("-----3 {}", urlData.getPageType());
-
 				urlData.setStatusCode(resp.statusCode());
-				LOGGER.error("-----4 {}", urlData.getPageType());
 				urlData.setPageType(URLTYPE.PAGE);
-				LOGGER.error("-----5 {}", urlData.getPageType());
-
 				urlData.setTitle(doc.title());
 
 				List<String> list = UrlUtils.parseDocByElementToList(doc);
@@ -78,6 +66,8 @@ public class WebCrawlerWorker extends Thread {
 				e.printStackTrace();
 			} catch (HttpStatusException e) {
 				int status = e.getStatusCode();
+				urlData.setStatusCode(status);
+
 				if (status == 429) {
 					LOGGER.warn("status == 429");
 					try {
@@ -86,14 +76,16 @@ public class WebCrawlerWorker extends Thread {
 						e1.printStackTrace();
 					}
 					break retStatusCode;
+				} else if (status == 404) {
+					urlData.setPageType(URLTYPE.NOTFOUND);
+					urlDetected.notFound(urlData);
+				} else if (status == 403) {
+					urlData.setPageType(URLTYPE.FORBIDDEN);
+					urlDetected.forbidden(urlData);
+				} else {
+					LOGGER.warn("status [{}] ", status);
 				}
 
-				urlData.setStatusCode(status);
-				if (status == 404) {
-					urlDetected.notFound(urlData);
-				} else {
-					System.err.println(status + ":" + urlData);
-				}
 			} catch (UnsupportedMimeTypeException e) {
 				urlData.setPageType(URLTYPE.FILE);
 				urlDetected.fileDetected(urlData);

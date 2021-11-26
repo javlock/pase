@@ -109,7 +109,7 @@ public class DataBase {
 		Where<UrlData, Integer> where = queryBuilder.where();
 
 		where.eq(PAGE_TYPE, UrlData.URLTYPE.PAGE);
-		queryBuilder.limit(300L);
+		// queryBuilder.limit(300L);
 
 		List<UrlData> listUrls = queryBuilder.query();
 		for (UrlData urlData : listUrls) {
@@ -137,6 +137,7 @@ public class DataBase {
 		createDAOs();
 		createTables();
 
+		linkCalls();
 		initData();
 
 		readSettingsFromDb();
@@ -155,6 +156,10 @@ public class DataBase {
 
 	}
 
+	private void linkCalls() {
+		// TODO UrlData.setDatabaseObj(this);
+	}
+
 	private void readSettingsFromDb() {
 		// users
 		// network
@@ -169,11 +174,11 @@ public class DataBase {
 	}
 
 	public void saveUrlData(UrlData urldata) throws SQLException {
+
 		if (urlDAO.idExists(urldata.getHashId())) {
 			saveUrlDataExist(urldata);
 		} else {
 			urlDAO.create(urldata);
-			urldata.save();
 			LOGGER.info("saved:{}", urldata);
 		}
 	}
