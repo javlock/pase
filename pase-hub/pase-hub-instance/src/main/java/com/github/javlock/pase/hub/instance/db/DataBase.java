@@ -173,6 +173,7 @@ public class DataBase {
 			saveUrlDataExist(urldata);
 		} else {
 			urlDAO.create(urldata);
+			urldata.save();
 			LOGGER.info("saved:{}", urldata);
 		}
 	}

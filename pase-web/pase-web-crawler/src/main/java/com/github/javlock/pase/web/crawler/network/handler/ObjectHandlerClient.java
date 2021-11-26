@@ -58,31 +58,20 @@ public class ObjectHandlerClient extends PaseObjectHandler {
 								if (updatedUrlDataoOptional.isPresent()) {
 									UpdatedUrlData val = updatedUrlDataoOptional.get();
 
-									LOGGER.info("");
-									LOGGER.info("");
-									LOGGER.info("");
-									LOGGER.info("");
-									LOGGER.info("");
-									LOGGER.info("");
-									LOGGER.info("");
-
 									StringBuilder builder = new StringBuilder();
+									builder.append('\n').append('\n').append('\n').append('\n').append('\n');
+
 									builder.append("data:").append(val.getNewData()).append('\n');
 
-									for (UrlData detected : val.getDetected()) {
-										builder.append("detected:").append(detected).append('\n');
-									}
 									for (UrlData fileDetected : val.getFileDetected()) {
 										builder.append("fileDetected:").append(fileDetected).append('\n');
 
 									}
 									for (UrlData forbidden : val.getForbidden()) {
 										builder.append("forbidden:").append(forbidden).append('\n');
-
 									}
 									for (String mailDetected : val.getMailDetected()) {
 										builder.append("mailDetected:").append(mailDetected).append('\n');
-
 									}
 									for (UrlData notfound : val.getNotFound()) {
 										builder.append("notfound:").append(notfound).append('\n');

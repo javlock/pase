@@ -1,8 +1,8 @@
 package com.github.javlock.pase.libs.data.web;
 
-import java.io.Serializable;
 import java.util.Objects;
 
+import com.github.javlock.pase.libs.data.DataObject;
 import com.github.javlock.pase.libs.utils.web.url.UrlUtils;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
@@ -11,12 +11,12 @@ import lombok.Getter;
 import lombok.Setter;
 
 @DatabaseTable(tableName = "urls")
-public class UrlData implements Serializable {
+public class UrlData extends DataObject {
 	public enum URLTYPE {
 		PAGE, FILE, UKNOWN, NOTGETTED, SOCKETTIMEOUTEXCEPTION, SOCKETEXCEPTION, SSLHANDSHAKEEXCEPTION;
 	}
 
-	private static final long serialVersionUID = 4979287113557476414L;
+	private static final long serialVersionUID = 3287343659643626439L;
 
 	private @Getter @Setter @DatabaseField(id = true) int hashId;
 	private @Getter @DatabaseField(width = 2400) String domain;
