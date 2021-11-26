@@ -18,6 +18,7 @@ import com.github.javlock.pase.hub.instance.db.DataBase;
 import com.github.javlock.pase.hub.instance.network.handler.ObjectHandlerServer;
 import com.github.javlock.pase.hub.instance.service.ConfigurationUpdater;
 import com.github.javlock.pase.hub.instance.storage.PaseHubStorage;
+import com.github.javlock.pase.libs.Balancer;
 import com.github.javlock.pase.libs.api.instance.Parameter;
 import com.github.javlock.pase.libs.api.instance.PaseApp;
 import com.github.javlock.pase.libs.data.web.UrlData;
@@ -26,7 +27,9 @@ import com.github.javlock.pase.libs.network.data.DataPacket;
 import com.github.javlock.pase.libs.network.data.DataPacket.ACTIONTYPE;
 import com.github.javlock.pase.libs.network.data.DataPacket.PACKETTYPE;
 import com.github.javlock.pase.libs.utils.io.IOUtils;
+import com.github.javlock.pase.web.crawler.engine.filter.FilterEngine;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
@@ -42,6 +45,7 @@ import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 import lombok.Getter;
 
+@SuppressFBWarnings(value = { "EI_EXPOSE_REP", "EI_EXPOSE_REP2" })
 public class PaseHub extends Thread {
 	private static final Logger LOGGER = LoggerFactory.getLogger("PaseHub");
 
@@ -52,9 +56,13 @@ public class PaseHub extends Thread {
 		hub.join();
 	}
 
-	private final @Getter PaseApp paseApp = new PaseApp();
+	private PaseHub instanceHub = this;
 
-	PaseHub instanceHub = this;
+	private final @Getter PaseApp paseApp = new PaseApp();
+	private final @Getter FilterEngine filterEngine = new FilterEngine();
+
+	private final @Getter Balancer balancer = new Balancer();
+
 	private final @Getter PaseHubStorage storage = new PaseHubStorage();
 	private final @Getter DataBase db = new DataBase(instanceHub);
 
@@ -82,6 +90,7 @@ public class PaseHub extends Thread {
 			if (ctx != null && context.equals(ctx)) {
 				continue;
 			}
+			balancer.netxtObj();
 			context.writeAndFlush(msg);
 		}
 	}
@@ -100,6 +109,8 @@ public class PaseHub extends Thread {
 		}
 
 		paseApp.appType(Parameter.PaseAppType.HUB).version(version).init();
+
+		balancer.setObjCountMax(10000);
 
 		db.init();
 		initNetwork();
@@ -142,7 +153,9 @@ public class PaseHub extends Thread {
 		bindChannelFuture = serverBootstrap.bind();
 
 		do {
+
 			try {
+
 				// FILES
 				List<UrlData> links = db.getUrlFilesNoParsed();
 				System.err.println(links.size());
@@ -152,14 +165,33 @@ public class PaseHub extends Thread {
 			} catch (SQLException e1) {
 				e1.printStackTrace();
 			}
+
+			// URL UPDATE
 			try {
 				List<UrlData> urlTimeExceeded = db.getUrlTimeExceeded();
+				for (UrlData urlData : urlTimeExceeded) {
+
+					broadcast(null, new DataPacket()
+							//
+							.setData(urlData).setType(PACKETTYPE.REQUEST).setAction(ACTIONTYPE.UPDATE)
+							//
+							.check());
+				}
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+
+			// URL NEW
+
+			try {
+				List<UrlData> urlTimeExceeded = db.getUrlNew();
 				for (UrlData urlData : urlTimeExceeded) {
 					broadcast(null, new DataPacket()
 							//
 							.setData(urlData).setType(PACKETTYPE.REQUEST).setAction(ACTIONTYPE.UPDATE)
 							//
 							.check());
+
 				}
 			} catch (SQLException e1) {
 				e1.printStackTrace();

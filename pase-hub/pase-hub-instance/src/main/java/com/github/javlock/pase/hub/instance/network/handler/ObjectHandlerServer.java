@@ -1,6 +1,8 @@
 package com.github.javlock.pase.hub.instance.network.handler;
 
 import java.io.Serializable;
+import java.sql.SQLException;
+import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,8 +15,10 @@ import com.github.javlock.pase.libs.network.PaseAppInitPacket;
 import com.github.javlock.pase.libs.network.PaseObjectHandler;
 import com.github.javlock.pase.libs.network.data.DataPacket;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.channel.ChannelHandlerContext;
 
+@SuppressFBWarnings(value = { "EI_EXPOSE_REP2" })
 public class ObjectHandlerServer extends PaseObjectHandler {
 	private static final Logger LOGGER = LoggerFactory.getLogger("ObjectHandlerServer");
 	private PaseHub hub;
@@ -60,7 +64,42 @@ public class ObjectHandlerServer extends PaseObjectHandler {
 		if (msg instanceof UpdatedUrlData updatedData) {
 			UrlData urldata = updatedData.getNewData();
 			hub.getDb().saveUrlData(urldata);
-			// TODO other
+
+			ArrayList<UrlData> detected = updatedData.getDetected();
+			ArrayList<UrlData> forbidden = updatedData.getForbidden();
+			ArrayList<UrlData> notFound = updatedData.getNotFound();
+
+			ArrayList<String> mailDetected = updatedData.getMailDetected();
+			ArrayList<UrlData> fileDetected = updatedData.getFileDetected();
+
+			detected.stream().forEachOrdered(urlD -> {
+				try {
+					hub.getDb().saveUrlData(urlD);
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			});
+			forbidden.stream().forEachOrdered(urlD -> {
+				try {
+					hub.getDb().saveUrlData(urlD);
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			});
+			notFound.stream().forEachOrdered(urlD -> {
+				try {
+					hub.getDb().saveUrlData(urlD);
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			});
+			fileDetected.stream().forEachOrdered(urlD -> {
+				try {
+					hub.getDb().saveUrlData(urlD);
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			});
 			return;
 		}
 

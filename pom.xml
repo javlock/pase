@@ -22,20 +22,25 @@
 
 		<jackson.version>2.13.0</jackson.version>
 		<postgresql.version>42.3.1</postgresql.version>
-		<ormlite.version>5.6</ormlite.version>
+		<ormlite.version>5.7</ormlite.version>
 
 
 
 		<spotbugs.version>4.4.2</spotbugs.version>
 		<spotbugs.dep.version>4.5.0</spotbugs.dep.version>
-
+		<spotbugs-annotations.version>4.5.0</spotbugs-annotations.version>
 	</properties>
 
 	<modules>
 		<module>pase-libs</module>
+
 		<module>pase-cli</module>
+
 		<module>pase-web</module>
+		<module>pase-jface</module>
+
 		<module>pase-hub</module>
+
 		<module>pase-updater</module>
 	</modules>
 
@@ -97,6 +102,13 @@
 			<version>${org.slf4j.version}</version>
 		</dependency>
 		<!-- LOGS -->
+
+		<dependency>
+			<groupId>com.github.spotbugs</groupId>
+			<artifactId>spotbugs-annotations</artifactId>
+			<version>${spotbugs-annotations.version}</version>
+		</dependency>
+
 	</dependencies>
 	<build>
 		<plugins>

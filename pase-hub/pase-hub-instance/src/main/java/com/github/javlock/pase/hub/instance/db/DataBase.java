@@ -9,7 +9,9 @@ import org.slf4j.LoggerFactory;
 
 import com.github.javlock.pase.hub.instance.PaseHub;
 import com.github.javlock.pase.hub.instance.config.db.DataBaseConfig;
+import com.github.javlock.pase.libs.data.RegExData;
 import com.github.javlock.pase.libs.data.web.UrlData;
+import com.github.javlock.pase.libs.data.web.UrlData.URLTYPE;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcPooledConnectionSource;
@@ -17,12 +19,18 @@ import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.Where;
 import com.j256.ormlite.table.TableUtils;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.Getter;
+
+@SuppressFBWarnings(value = { "EI_EXPOSE_REP2" })
 public class DataBase {
+	private static final String PAGE_TYPE = "pageType";
 	private static final Logger LOGGER = LoggerFactory.getLogger("DataBase");
 	private PaseHub hub;
 
 	private JdbcPooledConnectionSource connectionSource;
 	private Dao<UrlData, Integer> urlDAO;
+	private @Getter Dao<RegExData, String> regExDAO;
 
 	public DataBase(PaseHub instanceHub) {
 		hub = instanceHub;
@@ -30,6 +38,7 @@ public class DataBase {
 
 	void createDAOs() throws SQLException {
 		urlDAO = DaoManager.createDao(connectionSource, UrlData.class);// urls
+		regExDAO = DaoManager.createDao(connectionSource, RegExData.class);// regEx
 	}
 
 	void createSource() throws SQLException {
@@ -55,6 +64,7 @@ public class DataBase {
 
 	void createTables() throws SQLException {
 		createTableFor(urlDAO, UrlData.class);
+		createTableFor(regExDAO, RegExData.class);
 	}
 
 	public List<UrlData> getUrlFilesNoParsed() throws SQLException {
@@ -62,13 +72,33 @@ public class DataBase {
 		QueryBuilder<UrlData, Integer> queryBuilder = urlDAO.queryBuilder();
 		Where<UrlData, Integer> where = queryBuilder.where();
 
-		where.eq("pageType", UrlData.URLTYPE.FILE);
+		where.eq(PAGE_TYPE, UrlData.URLTYPE.FILE);
 
 		List<UrlData> listUrls = queryBuilder.query();
 		for (UrlData urlData : listUrls) {
+			if (hub.getFilterEngine().check(urlData)) {
+				// TODO отсеять уже разобранные файлы
+			}
 
 		}
-		// TODO отсеять уже разобранные файлы
+
+		return resp;
+	}
+
+	public List<UrlData> getUrlNew() throws SQLException {
+		ArrayList<UrlData> resp = new ArrayList<>();
+		QueryBuilder<UrlData, Integer> queryBuilder = urlDAO.queryBuilder();
+		Where<UrlData, Integer> where = queryBuilder.where();
+
+		where.eq(PAGE_TYPE, UrlData.URLTYPE.UKNOWN);
+		queryBuilder.limit(300L);
+
+		List<UrlData> listUrls = queryBuilder.query();
+		for (UrlData urlData : listUrls) {
+			if (hub.getFilterEngine().check(urlData)) {
+				resp.add(urlData);
+			}
+		}
 
 		return resp;
 	}
@@ -78,15 +108,25 @@ public class DataBase {
 		QueryBuilder<UrlData, Integer> queryBuilder = urlDAO.queryBuilder();
 		Where<UrlData, Integer> where = queryBuilder.where();
 
-		where.eq("pageType", UrlData.URLTYPE.PAGE);
+		where.eq(PAGE_TYPE, UrlData.URLTYPE.PAGE);
+		// queryBuilder.limit(300L);
 
 		List<UrlData> listUrls = queryBuilder.query();
 		for (UrlData urlData : listUrls) {
 			long time = System.currentTimeMillis() / 1000;
 			Long configTime = hub.getConfig().getTimeExceeded();
-			long checkTime = urlData.getTime() + configTime;
+			Long uTime = urlData.getTime();
+
+			if (uTime == null) {// бред
+				uTime = 0L;
+				urlData.setTime(0L);
+			}
+
+			long checkTime = uTime + configTime;
 			if (checkTime <= time) {
-				resp.add(urlData);
+				if (hub.getFilterEngine().check(urlData)) {
+					resp.add(urlData);
+				}
 			}
 		}
 		return resp;
@@ -97,17 +137,44 @@ public class DataBase {
 		createDAOs();
 		createTables();
 
+		linkCalls();
+		initData();
+
 		readSettingsFromDb();
 	}
 
+	private void initData() throws SQLException {
+		if (regExDAO.countOf() == 0) {
+			RegExData allowAll = new RegExData().setRegEx(".*").setAllow(true).setEnabled(true).build();
+			RegExData denyGov = new RegExData().setRegEx(".*\\.gov\\..*").setDeny(true).setEnabled(true).build();
+
+			regExDAO.create(denyGov);
+			regExDAO.create(allowAll);
+			hub.getFilterEngine().updateFilter(denyGov);
+			hub.getFilterEngine().updateFilter(allowAll);
+		}
+
+	}
+
+	private void linkCalls() {
+		// TODO UrlData.setDatabaseObj(this);
+	}
+
 	private void readSettingsFromDb() {
-		/*
-		 * for (RegExData regExData : regExDao) { storage.updateFilter(regExData);
-		 * System.err.println(regExData); }
-		 */
+		// users
+		// network
+		// threads
+
+		// regEx
+		for (RegExData regExData : regExDAO) {
+
+			hub.getFilterEngine().updateFilter(regExData);
+		}
+
 	}
 
 	public void saveUrlData(UrlData urldata) throws SQLException {
+
 		if (urlDAO.idExists(urldata.getHashId())) {
 			saveUrlDataExist(urldata);
 		} else {
@@ -121,7 +188,7 @@ public class DataBase {
 		boolean updated = false;
 
 		// PAGETYPE
-		if (fromDb.getPageType() != urldata.getPageType()) {
+		if (fromDb.getPageType() != urldata.getPageType() && !urldata.getPageType().equals(URLTYPE.UKNOWN)) {
 			fromDb.setPageType(urldata.getPageType());
 			updated = true;
 		}
@@ -133,27 +200,27 @@ public class DataBase {
 			if (fdbTitle == null) {
 				fromDb.setTitle(uTitle);
 				updated = true;
-			} else if (fdbTitle != null && !fdbTitle.equals(uTitle)) {
+			}
+			if (fdbTitle != null && !fdbTitle.equals(uTitle)) {
 				fromDb.setTitle(uTitle);
 				updated = true;
 			}
 		}
 
-		if (
-		// null
-
-		(fromDb.getTitle() == null && urldata.getTitle() != null)
-				// no null but !equals
-				|| (fromDb.getTitle() != null && !urldata.getTitle().equals(fromDb.getTitle()))) {
-			fromDb.setTitle(urldata.getTitle());
-			updated = true;
-		}
 		// TIME
-		if ((fromDb.getTime() == null && urldata.getTime() != null)
-				|| (fromDb.getTime() != null && urldata.getTime() > fromDb.getTime())) {
-			fromDb.setTime(urldata.getTime());
-			updated = true;
+		Long fTime = fromDb.getTime();
+		Long uTime = urldata.getTime();
+		if (uTime != null) {
+			if (fTime == null) {
+				fromDb.setTime(uTime);
+				updated = true;
+			}
+			if (fTime != null && (uTime > fTime)) {
+				fromDb.setTime(uTime);
+				updated = true;
+			}
 		}
+
 		// LAST >STATUSCODE<
 		if (fromDb.getStatusCode() != urldata.getStatusCode()) {
 			fromDb.setStatusCode(urldata.getStatusCode());

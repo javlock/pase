@@ -10,10 +10,13 @@ import com.github.javlock.pase.libs.data.web.UrlData;
 import com.github.javlock.pase.web.crawler.WebCrawler;
 import com.github.javlock.pase.web.crawler.WebCrawlerWorker;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 
+@SuppressFBWarnings(value = { "EI_EXPOSE_REP", "EI_EXPOSE_REP2" })
 public class Storage {
 	class StorageElement {
+		// FIXME NON WRITE
 		private String domain;
 		private final CopyOnWriteArrayList<UrlData> urls = new CopyOnWriteArrayList<>();
 
@@ -50,9 +53,6 @@ public class Storage {
 		}
 	}
 
-	private @Getter CopyOnWriteArrayList<String> forbidden = new CopyOnWriteArrayList<>();
-	private @Getter CopyOnWriteArrayList<String> allow = new CopyOnWriteArrayList<>();
-
 	private @Getter ConcurrentHashMap<String, WebCrawlerWorker> workers = new ConcurrentHashMap<>();
 
 	private final ConcurrentHashMap<String, StorageElement> urlMap = new ConcurrentHashMap<>();
@@ -69,6 +69,7 @@ public class Storage {
 
 		// filter
 		if (!crawler.filter.check(data)) {
+			crawler.urlDetected.forbidden(data);
 			return;
 		}
 
@@ -78,6 +79,7 @@ public class Storage {
 				throw new IllegalArgumentException("domain == null");
 			}
 			StorageElement element = urlMap.computeIfAbsent(domain, a -> new StorageElement());
+			element.domain = domain;
 			element.urls.addIfAbsent(data);
 		} else {
 			System.out.println("Storage.appendNew():" + data);

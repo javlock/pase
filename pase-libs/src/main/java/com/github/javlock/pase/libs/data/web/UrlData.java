@@ -3,6 +3,7 @@ package com.github.javlock.pase.libs.data.web;
 import java.io.Serializable;
 import java.util.Objects;
 
+import com.github.javlock.pase.libs.utils.web.url.UrlUtils;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
@@ -11,22 +12,34 @@ import lombok.Setter;
 
 @DatabaseTable(tableName = "urls")
 public class UrlData implements Serializable {
+
 	public enum URLTYPE {
-		PAGE, FILE, UKNOWN;
+		UKNOWN, // 0
+
+		PAGE, FILE, // 200
+
+		NOTGETTED, SOCKETTIMEOUTEXCEPTION, SOCKETEXCEPTION, SSLHANDSHAKEEXCEPTION,
+		//
+		NOTFOUND, // 404
+		FORBIDDEN;// 403
 	}
 
-	private static final long serialVersionUID = 4979287113557476414L;
+	private static final long serialVersionUID = 3287343659643626439L;
 
 	private @Getter @Setter @DatabaseField(id = true) int hashId;
+
 	private @Getter @DatabaseField(width = 2400) String domain;
 	private @Getter @DatabaseField(width = 2400) String url;
 	private @Getter @Setter @DatabaseField(width = 2400) String title;
-	private @Getter @Setter @DatabaseField Long time;
+	private @Getter @Setter @DatabaseField Long time = -1L;
 	private @Getter @Setter @DatabaseField int statusCode;
 	private @Getter boolean builded = false;
 	private @Getter @Setter @DatabaseField URLTYPE pageType = URLTYPE.UKNOWN;
 
 	public UrlData build() {
+		url = UrlUtils.getUrlWithOutSession(url);
+		domain = UrlUtils.getDomainByUrl(url);
+
 		if (domain == null) {
 			throw new IllegalArgumentException(String.format("UrlData.build():%s", url));
 		}

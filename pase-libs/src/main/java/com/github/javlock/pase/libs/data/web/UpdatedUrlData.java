@@ -3,14 +3,16 @@ package com.github.javlock.pase.libs.data.web;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 import lombok.Setter;
 
+@SuppressFBWarnings(value = { "EI_EXPOSE_REP" })
 public class UpdatedUrlData implements Serializable {
 	private static final long serialVersionUID = 7211131414986490729L;
 	private @Getter @Setter UrlData newData;
 
-	private @Getter ArrayList<String> detected = new ArrayList<>();
+	private @Getter ArrayList<UrlData> detected = new ArrayList<>();
 	private @Getter ArrayList<UrlData> forbidden = new ArrayList<>();
 	private @Getter ArrayList<UrlData> notFound = new ArrayList<>();
 
