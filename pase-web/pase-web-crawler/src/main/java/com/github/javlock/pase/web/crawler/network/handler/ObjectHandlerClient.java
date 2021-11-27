@@ -1,6 +1,7 @@
 package com.github.javlock.pase.web.crawler.network.handler;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -51,40 +52,11 @@ public class ObjectHandlerClient extends PaseObjectHandler {
 				if (action.equals(ACTIONTYPE.UPDATE)) {
 					if (data instanceof UrlData) {
 						UrlData urldataObj = (UrlData) data;
-						urldataObj.build();
-						new Thread(() -> {
-							try {
-								Optional<UpdatedUrlData> updatedUrlDataoOptional = crawler.updateURL(urldataObj);
-								if (updatedUrlDataoOptional.isPresent()) {
-									UpdatedUrlData val = updatedUrlDataoOptional.get();
-
-									StringBuilder builder = new StringBuilder();
-									builder.append('\n').append('\n').append('\n').append('\n').append('\n');
-
-									builder.append("data:").append(val.getNewData()).append('\n');
-
-									for (UrlData fileDetected : val.getFileDetected()) {
-										builder.append("fileDetected:").append(fileDetected).append('\n');
-
-									}
-									for (UrlData forbidden : val.getForbidden()) {
-										builder.append("forbidden:").append(forbidden).append('\n');
-									}
-									for (String mailDetected : val.getMailDetected()) {
-										builder.append("mailDetected:").append(mailDetected).append('\n');
-									}
-									for (UrlData notfound : val.getNotFound()) {
-										builder.append("notfound:").append(notfound).append('\n');
-									}
-									LOGGER.info("{}", builder);
-
-									ctx.writeAndFlush(val);
-								}
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}).start();
+						incomRequestUpdateUrlData(ctx, urldataObj);
 						return;
+					} else if (data instanceof ArrayList<?>) {
+						ArrayList<?> list = (ArrayList<?>) data;
+						incomRequestUpdateList(ctx, list);
 					} else {
 						LOGGER.info("data class:[{}] data:[{}]", data.getClass().getSimpleName(), data);
 					}
@@ -111,5 +83,46 @@ public class ObjectHandlerClient extends PaseObjectHandler {
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		LOGGER.error("error", cause);
+	}
+
+	private void incomRequestUpdateList(ChannelHandlerContext ctx, ArrayList<?> list) {
+		for (Object object : list) {
+			if (object instanceof UrlData) {
+				incomRequestUpdateUrlData(ctx, (UrlData) object);
+			}
+		}
+	}
+
+	private void incomRequestUpdateUrlData(ChannelHandlerContext ctx, UrlData urldataObj) {
+		urldataObj.build();
+		new Thread(() -> {
+			try {
+				Optional<UpdatedUrlData> updatedUrlDataoOptional = crawler.updateURL(urldataObj);
+				if (updatedUrlDataoOptional.isPresent()) {
+					UpdatedUrlData val = updatedUrlDataoOptional.get();
+
+					StringBuilder builder = new StringBuilder().append('\n');
+					builder.append("data:").append(val.getNewData()).append('\n');
+					for (UrlData fileDetected : val.getFileDetected()) {
+						builder.append("fileDetected:").append(fileDetected).append('\n');
+					}
+					for (UrlData forbidden : val.getForbidden()) {
+						builder.append("forbidden:").append(forbidden).append('\n');
+					}
+					for (String mailDetected : val.getMailDetected()) {
+						builder.append("mailDetected:").append(mailDetected).append('\n');
+					}
+					for (UrlData notfound : val.getNotFound()) {
+						builder.append("notfound:").append(notfound).append('\n');
+					}
+					LOGGER.info("{}", builder);
+
+					ctx.writeAndFlush(val);
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}).start();
+
 	}
 }

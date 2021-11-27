@@ -85,13 +85,13 @@ public class DataBase {
 		return resp;
 	}
 
-	public List<UrlData> getUrlNew() throws SQLException {
+	public ArrayList<UrlData> getUrlNew() throws SQLException {
 		ArrayList<UrlData> resp = new ArrayList<>();
 		QueryBuilder<UrlData, Integer> queryBuilder = urlDAO.queryBuilder();
 		Where<UrlData, Integer> where = queryBuilder.where();
 
 		where.eq(PAGE_TYPE, UrlData.URLTYPE.UKNOWN);
-		queryBuilder.limit(300L);
+		// queryBuilder.limit(300L);
 
 		List<UrlData> listUrls = queryBuilder.query();
 		for (UrlData urlData : listUrls) {

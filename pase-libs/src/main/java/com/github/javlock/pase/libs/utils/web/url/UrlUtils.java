@@ -40,14 +40,22 @@ public class UrlUtils {
 
 	private static final String ABSHREF = "abs:href";
 
-	static final String REGEXDOMAIN = ":\\/\\/(([-A-Za-z0-9]*\\.){1,}[-A-Za-z0-9]*)";
+	// static final String = ":\\/\\/(([-A-Za-z0-9]*\\.){1,}[-A-Za-z0-9]*)";
+
+	private static final String REGEXDOMAIN =
+			// 2 proto
+			// 3 domain
+			// 5 port
+			// 6 path
+			// 7 params
+			"((ftp|htt[ps]{1,2}):\\/\\/)?([-a-z0-9.а-я]{1,}\\.[a-z0-9а-я]{1,})([:0-9]{0,})([-a-zA-Z0-9а-я\\/.=&\\%\\ +]*)?([?a-zA-Z0-9а-я+=&%]*)?";
 
 	public static String getDomainByUrl(String url) {
 		final Pattern pattern = Pattern.compile(REGEXDOMAIN, Pattern.MULTILINE);
-		final Matcher matcher = pattern.matcher(url);
+		final Matcher matcher = pattern.matcher(url.toLowerCase());
 		String group = null;
 		while (matcher.find()) {
-			group = matcher.group(1);// 1
+			group = matcher.group(3);// 3 domain
 			if (group != null) {
 				break;
 			}
@@ -109,7 +117,7 @@ public class UrlUtils {
 	 * @return true if domain length 22 (v2) and false to other (v3 length=62)
 	 */
 	public static boolean isOldTorProto(UrlData urlData) {
-		String domain = urlData.getDomain();
+		String domain = urlData.getDomain().toLowerCase();
 		return domain.endsWith(".onion") && domain.length() == 22;
 	}
 

@@ -2,7 +2,6 @@ package com.github.javlock.pase.libs.network.data;
 
 import java.io.Serializable;
 
-import com.github.javlock.pase.libs.data.web.UrlData;
 import com.github.javlock.pase.libs.network.Packet;
 
 import lombok.Getter;
@@ -45,7 +44,7 @@ public class DataPacket extends Packet {
 		return this;
 	}
 
-	public DataPacket setData(UrlData input) throws IllegalArgumentException {
+	public DataPacket setData(Serializable input) throws IllegalArgumentException {
 		if (input == null) {
 			throw new IllegalArgumentException("data==null");
 		}

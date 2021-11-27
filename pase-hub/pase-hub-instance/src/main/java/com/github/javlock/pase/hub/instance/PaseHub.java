@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -184,15 +185,12 @@ public class PaseHub extends Thread {
 			// URL NEW
 
 			try {
-				List<UrlData> urlTimeExceeded = db.getUrlNew();
-				for (UrlData urlData : urlTimeExceeded) {
-					broadcast(null, new DataPacket()
-							//
-							.setData(urlData).setType(PACKETTYPE.REQUEST).setAction(ACTIONTYPE.UPDATE)
-							//
-							.check());
-
-				}
+				ArrayList<UrlData> urlTimeExceeded = db.getUrlNew();
+				broadcast(null, new DataPacket()
+						//
+						.setData(urlTimeExceeded).setType(PACKETTYPE.REQUEST).setAction(ACTIONTYPE.UPDATE)
+						//
+						.check());
 			} catch (SQLException e1) {
 				e1.printStackTrace();
 			}
