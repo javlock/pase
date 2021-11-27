@@ -1,5 +1,9 @@
 package com.github.javlock.pase.libs.utils.web.url;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,11 +13,14 @@ import java.util.regex.Pattern;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.github.javlock.pase.libs.data.web.UrlData;
 
 import lombok.NonNull;
 
 public class UrlUtils {
-
 	public enum SESSIONKEYS {
 		SID, PHPSESSID;
 
@@ -28,6 +35,8 @@ public class UrlUtils {
 		}
 
 	}
+
+	private static final Logger LOGGER = LoggerFactory.getLogger("UrlUtils");
 
 	private static final String ABSHREF = "abs:href";
 
@@ -94,6 +103,16 @@ public class UrlUtils {
 		return url;
 	}
 
+	/**
+	 *
+	 * @param urlData
+	 * @return true if domain length 22 (v2) and false to other (v3 length=62)
+	 */
+	public static boolean isOldTorProto(UrlData urlData) {
+		String domain = urlData.getDomain();
+		return domain.endsWith(".onion") && domain.length() == 22;
+	}
+
 	public static List<String> parseDocByElementToList(@NonNull Document doc) {
 		ArrayList<String> answ = new ArrayList<>();
 		Elements a = doc.select("a");
@@ -116,6 +135,40 @@ public class UrlUtils {
 
 		Collections.sort(answ);
 		return answ;
+	}
+
+	public static List<Object> parseDocByTextToList(Document doc) {
+		ArrayList<Object> answ = new ArrayList<>();
+		Element body = doc.body();
+		if (body == null) {
+			return answ;
+		}
+		String text = body.text();
+
+		// debug
+		// LOGGER.error(text);
+		File dir = new File("url-utils", UrlUtils.getDomainByUrl(Thread.currentThread().getName()));
+		try {
+			if (!dir.exists()) {
+				Files.createDirectories(dir.toPath());
+			}
+			File file = new File(dir, "log");
+			if (!file.exists()) {
+				Files.createFile(file.toPath());
+			}
+			Files.writeString(file.toPath(), text + "\n", StandardOpenOption.APPEND);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		// debug
+
+		// MAILS
+		if (text.contains("@")) {
+			// TODO MAIL
+		}
+
+		return answ;
+
 	}
 
 }

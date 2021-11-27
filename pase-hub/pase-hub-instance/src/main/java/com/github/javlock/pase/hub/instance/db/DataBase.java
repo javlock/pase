@@ -225,8 +225,21 @@ public class DataBase {
 		if (fromDb.getStatusCode() != urldata.getStatusCode()) {
 			fromDb.setStatusCode(urldata.getStatusCode());
 			updated = true;
-
 		}
+
+		// statusCode
+		int scU = urldata.getStatusCode();
+		int scF = fromDb.getStatusCode();
+		if (scF == -1) {
+			fromDb.setStatusCode(scU);
+			updated = true;
+		} else {
+			if (scF != scU) {
+				fromDb.setStatusCode(scU);
+				updated = true;
+			}
+		}
+
 		if (updated) {
 			urlDAO.update(fromDb);
 		}

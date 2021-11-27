@@ -18,7 +18,10 @@ public class UrlData implements Serializable {
 
 		PAGE, FILE, // 200
 
-		NOTGETTED, SOCKETTIMEOUTEXCEPTION, SOCKETEXCEPTION, SSLHANDSHAKEEXCEPTION,
+		NOTGETTED, //
+		OLDPROTO, // TOR v2
+		//
+		SOCKETTIMEOUTEXCEPTION, SOCKETEXCEPTION, SSLHANDSHAKEEXCEPTION,
 		//
 		NOTFOUND, // 404
 		FORBIDDEN;// 403
@@ -32,7 +35,7 @@ public class UrlData implements Serializable {
 	private @Getter @DatabaseField(width = 2400) String url;
 	private @Getter @Setter @DatabaseField(width = 2400) String title;
 	private @Getter @Setter @DatabaseField Long time = -1L;
-	private @Getter @Setter @DatabaseField int statusCode;
+	private @Getter @Setter @DatabaseField int statusCode = -1;
 	private @Getter boolean builded = false;
 	private @Getter @Setter @DatabaseField URLTYPE pageType = URLTYPE.UKNOWN;
 
